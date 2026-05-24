@@ -242,7 +242,8 @@ If you did not request this email, you can ignore it safely.
     <!-- LOGIC -->
     <script>
         // CONFIG
-        const API_URL = 'https://workers.luviio.com'; // Your Worker URL
+        const API_URL = 'https://workers.luviio.com'; // NO TRAILING SLASH!
+
         let currentUser = null;
 
         // --- UI SWITCHING ---
@@ -274,7 +275,8 @@ If you did not request this email, you can ignore it safely.
             btn.disabled = true;
 
             try {
-                const res = await fetch(`${API_URL}/api/admin/login`, {
+                // EXPLICIT FULL URL
+                const res = await fetch(`${API_URL}/api/admin/login`, { 
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -282,6 +284,10 @@ If you did not request this email, you can ignore it safely.
                         password: document.getElementById('l-pass').value
                     })
                 });
+                
+                // DEBUG: Log URL to console to be sure
+                console.log("Fetching from:", `${API_URL}/api/admin/login`);
+
                 const data = await res.json();
 
                 if(data.success) {
@@ -292,7 +298,8 @@ If you did not request this email, you can ignore it safely.
                     errBox.classList.remove('hidden');
                 }
             } catch(err) {
-                errBox.innerText = "Network error";
+                console.error(err);
+                errBox.innerText = "Network error: " + err.message;
                 errBox.classList.remove('hidden');
             } finally {
                 btn.innerText = "Access Dashboard";
@@ -305,14 +312,12 @@ If you did not request this email, you can ignore it safely.
             const errBox = document.getElementById('r-error');
             errBox.classList.add('hidden');
 
-            // Simple client-side restriction logic could go here
-            // For now, we allow it as per instructions (Superadmin creates account)
-            
             const btn = e.target.querySelector('button');
             btn.innerText = "Creating Account...";
             btn.disabled = true;
 
             try {
+                // EXPLICIT FULL URL
                 const res = await fetch(`${API_URL}/api/admin/register`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -346,7 +351,6 @@ If you did not request this email, you can ignore it safely.
             document.getElementById('auth-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
             
-            // Populate User Data
             document.getElementById('dash-name').innerText = currentUser.companyName || "Admin";
             document.getElementById('nav-user').innerText = currentUser.email;
             document.getElementById('api-key-display').value = currentUser.apiKey;
@@ -357,7 +361,6 @@ If you did not request this email, you can ignore it safely.
             currentUser = null;
             document.getElementById('dashboard-view').style.display = 'none';
             document.getElementById('auth-view').style.display = 'flex';
-            // Reset forms
             document.getElementById('l-email').value = '';
             document.getElementById('l-pass').value = '';
         }
@@ -394,23 +397,6 @@ If you did not request this email, you can ignore it safely.
             const msg = document.getElementById('settings-msg');
             msg.classList.add('hidden');
             
-            // In a real app, we would send a PUT request here.
-            // For now, we simulate saving and update local state.
-            /*
-            await fetch(`${API_URL}/api/admin/settings`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    token: currentUser.token,
-                    senderEmail: document.getElementById('set-sender').value,
-                    companyName: document.getElementById('set-company').value,
-                    otpTemplate: document.getElementById('set-otp-tpl').value,
-                    magicLinkTemplate: document.getElementById('set-link-tpl').value
-                })
-            });
-            */
-           
-            // Simulate save delay
             const btn = event.target;
             btn.innerText = "Saving...";
             setTimeout(() => {

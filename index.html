@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auth2U Dashboard — Admin Panel</title>
+    <title>Auth2U — Enterprise Auth Provider</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,913 +16,415 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        'crimson-brand': '#AB1509',
-                        'crimson-dark': '#8A1107',
-                        'charcoal-deep': '#B0B0A8',
-                        'cream-bg': '#000000',
-                        'light-neutral': '#0A0A0A',
-                        'border-warm': '#2A2A2A',
-                        'card-dark': '#111111',
-                        'surface-dark': '#1A1A1A',
-                    },
-                    fontFamily: {
-                        'dm-sans': ['DM Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-                        'space-mono': ['Space Mono', 'Courier New', 'monospace'],
-                    },
-                    boxShadow: {
-                        'hard': '4px 4px 0px 0px rgba(255,255,255,0.1)',
-                        'hard-sm': '2px 2px 0px 0px rgba(255,255,255,0.1)',
-                        'glow': '0 0 40px rgba(171, 21, 9, 0.25)',
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        brand: { 50:'#fff1f2', 100:'#ffe4e6', 500:'#F43F5E', 600:'#E11D48', 900:'#881337' },
+                        dark: { 50:'#f8fafc', 800:'#1e293b', 900:'#0f172a', 950:'#020617' }
                     }
                 }
             }
         }
     </script>
-    
     <style>
-        * {
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background-color: #000000;
-            color: #FFFFFF;
-            overflow-x: hidden;
-        }
-
-        /* Glassmorphism */
-        .glass-panel {
-            background: rgba(17, 17, 17, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(42, 42, 42, 0.8);
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #0A0A0A;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #333333;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #AB1509;
-        }
-
-        /* Input Styles */
-        .input-field {
-            background-color: #1A1A1A;
-            border: 2px solid #333333;
-            border-radius: 14px;
-            padding: 14px 18px;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            width: 100%;
-            color: #FFFFFF;
-            font-family: 'DM Sans', sans-serif;
-        }
-        
-        .input-field:focus {
-            outline: none;
-            border-color: #AB1509;
-            background-color: #0A0A0A;
-            box-shadow: 0 0 0 4px rgba(171, 21, 9, 0.2);
-        }
-        
-        .input-field::placeholder {
-            color: #666666;
-        }
-
-        /* Button Styles */
-        .btn-primary {
-            background-color: #AB1509;
-            color: #FFFFFF;
-            font-weight: 700;
-            padding: 14px 28px;
-            border: 2px solid #AB1509;
-            border-radius: 14px;
-            box-shadow: 4px 4px 0px 0px rgba(171, 21, 9, 0.4);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .btn-primary:hover::before {
-            left: 100%;
-        }
-        
-        .btn-primary:hover {
-            background-color: #D42014;
-            transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px 0px rgba(171, 21, 9, 0.5);
-        }
-        
-        .btn-primary:active {
-            transform: translate(2px, 2px);
-            box-shadow: 2px 2px 0px 0px rgba(171, 21, 9, 0.3);
-        }
-
-        .btn-secondary {
-            background-color: transparent;
-            color: #FFFFFF;
-            font-weight: 700;
-            padding: 14px 28px;
-            border: 2px solid #333333;
-            border-radius: 14px;
-            box-shadow: 4px 4px 0px 0px rgba(255,255,255,0.05);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #1A1A1A;
-            transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px 0px rgba(255,255,255,0.08);
-            border-color: #444444;
-        }
-        
-        .btn-danger {
-            background-color: #DC2626;
-            color: white;
-            font-weight: 700;
-            padding: 10px 20px;
-            border: 2px solid #DC2626;
-            border-radius: 12px;
-            box-shadow: 3px 3px 0px 0px rgba(220, 38, 38, 0.4);
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        
-        .btn-danger:hover {
-            background-color: #EF4444;
-            transform: translate(-1px, -1px);
-            box-shadow: 4px 4px 0px 0px rgba(220, 38, 38, 0.5);
-        }
-
-        .btn-success {
-            background-color: #059669;
-            color: white;
-            font-weight: 700;
-            padding: 10px 20px;
-            border: 2px solid #059669;
-            border-radius: 12px;
-            box-shadow: 3px 3px 0px 0px rgba(5, 150, 105, 0.4);
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        
-        .btn-success:hover {
-            background-color: #10B981;
-            transform: translate(-1px, -1px);
-            box-shadow: 4px 4px 0px 0px rgba(5, 150, 105, 0.5);
-        }
-
-        /* Card Styles */
-        .dashboard-card {
-            background: linear-gradient(135deg, #111111 0%, #0A0A0A 100%);
-            border: 2px solid #222222;
-            border-radius: 20px;
-            padding: 32px;
-            box-shadow: 4px 4px 0px 0px rgba(171, 21, 9, 0.15);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .dashboard-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #AB1509, #E64B3C);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .dashboard-card:hover::before {
-            opacity: 1;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #111111 0%, #0D0D0D 100%);
-            border: 2px solid #222222;
-            border-radius: 16px;
-            padding: 24px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-            border-color: #AB1509;
-            box-shadow: 0 10px 30px rgba(171, 21, 9, 0.2);
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, rgba(171, 21, 9, 0.2) 0%, rgba(171, 21, 9, 0.05) 100%);
-            border: 2px solid rgba(171, 21, 9, 0.3);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 12px;
-        }
-
-        /* Code Block */
-        .code-block {
-            background: #0A0A0A;
-            border: 2px solid #222222;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .code-header {
-            background: #151515;
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 2px solid #222222;
-        }
-        
-        .code-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-        
-        .code-content {
-            padding: 20px;
-            font-family: 'Space Mono', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            color: #E6E6E6;
-            overflow-x: auto;
-            min-height: 120px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        /* Badge */
-        .badge {
-            background: linear-gradient(135deg, rgba(171, 21, 9, 0.2) 0%, rgba(230, 75, 60, 0.15) 100%);
-            color: #FF6B5B;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 6px 14px;
-            border-radius: 9999px;
-            border: 1px solid rgba(171, 21, 9, 0.3);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        /* Gradient Text */
-        .gradient-text {
-            background: linear-gradient(135deg, #FF6B5B 0%, #AB1509 50%, #D42014 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* Background Grid Pattern */
-        .bg-grid {
-            background-image: 
-                linear-gradient(rgba(171, 21, 9, 0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(171, 21, 9, 0.06) 1px, transparent 1px);
-            background-size: 60px 60px;
-        }
-
-        /* Animations */
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
-            50% { box-shadow: 0 0 0 8px rgba(5, 150, 105, 0); }
-        }
-
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .status-pulse {
-            animation: pulse-glow 2s infinite;
-        }
-
-        /* Test Section Warning Style (Dark Mode Adaptation) */
-        .test-section {
-            background: linear-gradient(135deg, rgba(171, 21, 9, 0.08) 0%, rgba(171, 21, 9, 0.02) 100%);
-            border-left: 4px solid #AB1509;
-            border-radius: 12px;
-            padding: 24px;
-            margin-top: 24px;
-        }
-
-        /* Config Code Display */
-        .config-code {
-            background: #0A0A0A;
-            border: 2px solid #333333;
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-family: 'Space Mono', monospace;
-            font-size: 13px;
-            color: #10B981;
-            word-break: break-all;
-            display: inline-block;
-            max-width: 100%;
-        }
-
-        /* Sidebar Navigation */
-        .sidebar-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: 12px;
-            color: #999999;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        
-        .sidebar-link:hover {
-            background: rgba(171, 21, 9, 0.1);
-            color: #FFFFFF;
-        }
-        
-        .sidebar-link.active {
-            background: rgba(171, 21, 9, 0.15);
-            color: #FF6B5B;
-            border-left: 3px solid #AB1509;
-        }
+        body { background-color: #020617; color: #e2e8f0; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+        .input-dark { background: #0f172a; border: 1px solid #334155; color: white; transition: 0.2s; }
+        .input-dark:focus { border-color: #F43F5E; outline: none; box-shadow: 0 0 0 3px rgba(244,63,94,0.2); }
+        .btn-primary { background: #F43F5E; color: white; font-weight: 600; padding: 10px 20px; border-radius: 8px; transition: 0.2s; }
+        .btn-primary:hover { background: #E11D48; transform: translateY(-1px); }
+        .btn-secondary { background: transparent; border: 1px solid #334155; color: #cbd5e1; font-weight: 500; padding: 10px 20px; border-radius: 8px; transition: 0.2s; }
+        .btn-secondary:hover { background: #1e293b; border-color: #64748b; }
     </style>
 </head>
-<body class="bg-black min-h-screen bg-grid">
+<body class="min-h-screen font-sans">
 
-    <!-- LOGIN VIEW -->
-    <div id="login-view" class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+    <!-- APP CONTAINER -->
+    <div id="app">
         
-        <!-- Background Decorations -->
-        <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-red-900/20 via-red-950/10 to-transparent rounded-full blur-3xl animate-float"></div>
-        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-gray-800/20 to-transparent rounded-full blur-3xl" style="animation: float 8s ease-in-out infinite reverse;"></div>
+        <!-- VIEW: AUTH SCREENS (Login/Register) -->
+        <div id="auth-view" class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+            <!-- Background Glow -->
+            <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-600 rounded-full blur-[120px] opacity-20"></div>
+            <div class="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-600 rounded-full blur-[120px] opacity-20"></div>
 
-        <div class="w-full max-w-md relative z-10">
-            
-            <!-- Logo/Brand -->
-            <div class="text-center mb-10">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-crimson-brand border-2 border-white/20 rounded-2xl mb-6 shadow-hard-sm mx-auto">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                    </svg>
+            <div class="glass p-8 rounded-2xl w-full max-w-md shadow-2xl relative z-10">
+                
+                <!-- Logo Area -->
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-14 h-14 bg-brand-600 rounded-xl mb-4 shadow-lg shadow-brand-600/30">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white">Auth2U Console</h1>
+                    <p class="text-slate-400 text-sm mt-2">Enterprise Authentication Infrastructure</p>
                 </div>
-                <h1 class="font-dm-sans font-black text-3xl text-white mb-2">Admin Portal</h1>
-                <p class="font-dm-sans text-charcoal-deep">Enter your credentials to access the dashboard</p>
-            </div>
 
-            <!-- Login Card -->
-            <div class="dashboard-card">
-                <form onsubmit="event.preventDefault(); handleLogin();" class="space-y-6">
-                    
+                <!-- TOGGLE: LOGIN vs REGISTER -->
+                <div class="flex mb-6 bg-dark-900 rounded-lg p-1 relative">
+                    <button id="tab-login" onclick="switchTab('login')" class="flex-1 py-2 text-sm font-medium rounded-md transition-all text-white bg-brand-600">Login</button>
+                    <button id="tab-register" onclick="switchTab('register')" class="flex-1 py-2 text-sm font-medium rounded-md transition-all text-slate-400 hover:text-white">Register</button>
+                </div>
+
+                <!-- FORM: LOGIN -->
+                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2 ml-1">Email Address</label>
-                        <input type="email" id="admin-email" class="input-field" placeholder="admin@auth2u.com" required>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
+                        <input type="email" id="l-email" class="input-dark w-full px-4 py-3 rounded-lg" placeholder="admin@company.com" required>
                     </div>
-
                     <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2 ml-1">Password</label>
-                        <input type="password" id="admin-pass" class="input-field" placeholder="••••••••••••" required>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Password</label>
+                        <input type="password" id="l-pass" class="input-dark w-full px-4 py-3 rounded-lg" placeholder="••••••••" required>
                     </div>
-
-                    <div class="flex items-center justify-between text-sm">
-                        <label class="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-white transition-colors">
-                            <input type="checkbox" class="w-4 h-4 rounded border-gray-600 bg-transparent text-crimson-brand focus:ring-crimson-brand focus:ring-offset-0">
-                            Remember me
-                        </label>
-                        <a href="#" class="text-crimson-brand hover:text-crimson-dark transition-colors font-medium">Forgot password?</a>
-                    </div>
-
-                    <button type="submit" class="btn-primary w-full py-4 text-base rounded-xl">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                        </svg>
-                        Sign In to Dashboard
-                    </button>
+                    <button type="submit" class="btn-primary w-full py-3 mt-2">Access Dashboard</button>
+                    <p id="l-error" class="text-red-400 text-xs text-center mt-2 hidden"></p>
                 </form>
 
-                <div class="mt-8 pt-6 border-t border-gray-800 text-center">
-                    <span class="text-sm text-gray-500">Protected by </span>
-                    <span class="font-bold gradient-text">Auth2U Security</span>
-                </div>
-            </div>
+                <!-- FORM: REGISTER -->
+                <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 gap-4">
+                         <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Company Name</label>
+                            <input type="text" id="r-company" class="input-dark w-full px-4 py-3 rounded-lg" placeholder="Acme Inc" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Email</label>
+                            <input type="email" id="r-email" class="input-dark w-full px-4 py-3 rounded-lg" placeholder="you@acme.com" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Password</label>
+                        <input type="password" id="r-pass" class="input-dark w-full px-4 py-3 rounded-lg" placeholder="Min 8 characters" required>
+                    </div>
+                    
+                    <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mt-2">
+                        <p class="text-yellow-200 text-xs"><strong>Note:</strong> Public registration is restricted. If you cannot create an account, please contact support.</p>
+                    </div>
 
-            <!-- Footer Info -->
-            <p class="text-center mt-8 text-xs text-gray-600">
-                © 2026 Auth2U Sdn Bhd • Kuala Lumpur, Malaysia<br>
-                Session encrypted end-to-end
-            </p>
+                    <button type="submit" class="btn-primary w-full py-3 mt-2">Create Account</button>
+                    <p id="r-error" class="text-red-400 text-xs text-center mt-2 hidden"></p>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- VIEW: DASHBOARD MAIN -->
+        <div id="dashboard-view" style="display:none;" class="min-h-screen">
+            
+            <!-- NAVBAR -->
+            <nav class="glass sticky top-0 z-50 px-6 py-4 border-b border-white/5">
+                <div class="max-w-7xl mx-auto flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">A2U</div>
+                        <span class="font-bold text-white tracking-wide">Dashboard</span>
+                        <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full border border-green-500/30">Live</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span id="nav-user" class="text-sm text-slate-400 hidden md:block">admin@company.com</span>
+                        <button onclick="logout()" class="text-slate-400 hover:text-red-400 text-sm font-medium transition-colors">Logout</button>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- CONTENT -->
+            <main class="max-w-7xl mx-auto p-6 space-y-8">
+                
+                <!-- HEADER -->
+                <div class="pt-4 pb-2">
+                    <h2 class="text-3xl font-bold text-white">Welcome back, <span id="dash-name">Admin</span></h2>
+                    <p class="text-slate-400 mt-1">Manage your authentication infrastructure and email templates.</p>
+                </div>
+
+                <!-- GRID STATS -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass p-6 rounded-xl border-l-4 border-brand-500">
+                        <p class="text-slate-400 text-sm font-medium">Active Users</p>
+                        <p class="text-3xl font-bold text-white mt-1">--</p> <!-- Placeholder for real data later -->
+                    </div>
+                    <div class="glass p-6 rounded-xl border-l-4 border-blue-500">
+                        <p class="text-slate-400 text-sm font-medium">API Requests (Today)</p>
+                        <p class="text-3xl font-bold text-white mt-1" id="stat-reqs">0</p>
+                    </div>
+                    <div class="glass p-6 rounded-xl border-l-4 border-emerald-500">
+                        <p class="text-slate-400 text-sm font-medium">Deliverability</p>
+                        <p class="text-3xl font-bold text-emerald-400 mt-1">99.9%</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <!-- LEFT: API KEYS & TEST -->
+                    <div class="glass p-6 rounded-xl space-y-6">
+                        <h3 class="text-lg font-bold text-white border-b border-white/10 pb-3">Developer Tools</h3>
+                        
+                        <!-- API KEY DISPLAY -->
+                        <div>
+                            <label class="text-xs font-bold text-slate-400 uppercase">Your Secret Key</label>
+                            <div class="flex mt-1">
+                                <input type="text" id="api-key-display" readonly value="Generating..." class="input-dark flex-1 rounded-r-none text-sm font-mono">
+                                <button onclick="copyKey()" class="bg-dark-800 border border-l-0 border-gray-600 text-slate-300 px-3 rounded-r-lg hover:bg-dark-700">Copy</button>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Use this key in your API headers to authenticate requests.</p>
+                        </div>
+
+                        <!-- TEST SECTION -->
+                        <div class="bg-dark-950 p-4 rounded-lg border border-white/5">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-sm font-bold text-white">Test OTP Endpoint</span>
+                                <span class="text-xs text-brand-400 font-mono">POST /api/send-otp</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="email" id="test-email" placeholder="Enter test email..." class="input-dark flex-1 text-sm py-2">
+                                <button onclick="sendTestOTP()" class="btn-primary text-sm py-2">Send Test</button>
+                            </div>
+                            <pre id="response-log" class="mt-3 text-xs text-green-400 bg-black/30 p-2 rounded hidden overflow-auto max-h-32">// Response...</pre>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: SETTINGS / TEMPLATES -->
+                    <div class="glass p-6 rounded-xl space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-white border-b border-white/10 pb-3 w-full">Brand Settings</h3>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Sender Domain / Email</label>
+                                <input type="email" id="set-sender" class="input-dark w-full text-sm" placeholder="noreply@yourdomain.com" value="onboarding@resend.dev">
+                                <p class="text-xs text-slate-500 mt-1">Must be verified in Resend dashboard first.</p>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Company Name (Signature)</label>
+                                <input type="text" id="set-company" class="input-dark w-full text-sm" placeholder="My Company Name" value="Luviio Auth">
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 uppercase block mb-1">OTP Email Template</label>
+                                <textarea id="set-otp-tpl" class="input-dark w-full h-32 text-xs p-3 font-mono leading-relaxed">Hi there,
+
+Use the verification code below to sign in.
+
+# {CODE}
+
+This code will expire in 10 minutes.
+
+If you didn’t request this code, you can safely ignore this email.
+
+— {COMPANY_NAME} Auth</textarea>
+                            </div>
+
+                             <div>
+                                <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Magic Link Template</label>
+                                <textarea id="set-link-tpl" class="input-dark w-full h-32 text-xs p-3 font-mono leading-relaxed">Hi there,
+
+We received a request to sign in to your account.
+
+Use the secure magic link below:
+
+[ Open Secure Session ]
+
+This link is single-use and expires in 10 minutes.
+
+If you did not request this email, you can ignore it safely.
+
+— {COMPANY_NAME}</textarea>
+                            </div>
+
+                            <button onclick="saveSettings()" class="btn-secondary w-full">Save Configuration</button>
+                            <p id="settings-msg" class="text-xs text-green-400 text-center hidden">Settings Saved!</p>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
         </div>
     </div>
 
-    <!-- DASHBOARD VIEW -->
-    <div id="dashboard-view" style="display:none;" class="min-h-screen">
-        
-        <!-- Top Navigation Bar -->
-        <nav class="glass-panel fixed top-0 left-0 right-0 z-50 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                
-                <div class="flex items-center gap-4">
-                    <!-- Logo -->
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-crimson-brand border border-white/20 rounded-xl flex items-center justify-center shadow-hard-sm">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                            </svg>
-                        </div>
-                        <span class="font-dm-sans font-extrabold text-xl text-white hidden sm:block">Dashboard</span>
-                    </div>
-
-                    <!-- Status Indicator -->
-                    <div class="hidden md:flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-full">
-                        <span class="relative flex h-2 w-2">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                        </span>
-                        <span class="text-xs font-medium text-green-400">Systems Operational</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <!-- Notifications -->
-                    <button class="relative w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/10">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                        </svg>
-                        <span class="absolute top-2 right-2 w-2 h-2 bg-crimson-brand rounded-full"></span>
-                    </button>
-
-                    <!-- User Menu -->
-                    <button onclick="logout()" class="btn-danger text-sm py-2 px-4 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                        </svg>
-                        Logout
-                    </button>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Main Content Area -->
-        <main class="pt-28 pb-12 px-6">
-            <div class="max-w-7xl mx-auto">
-                
-                <!-- Welcome Header -->
-                <div class="mb-10">
-                    <h1 class="font-dm-sans font-black text-3xl md:text-4xl text-white mb-2">
-                        Dashboard Overview
-                    </h1>
-                    <p class="font-dm-sans text-lg text-charcoal-deep">
-                        Welcome back, Admin. Here's what's happening with your authentication service today.
-                    </p>
-                </div>
-
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                    
-                    <!-- Total Users Stat -->
-                    <div class="stat-card group cursor-pointer">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="stat-icon group-hover:bg-crimson-brand group-hover:border-crimson-brand transition-all duration-300">
-                                <svg class="w-6 h-6 text-crimson-brand group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                </svg>
-                            </div>
-                            <span class="badge">Live</span>
-                        </div>
-                        <div class="font-dm-sans font-black text-4xl text-white mb-1" id="val-users">0</div>
-                        <div class="text-sm text-charcoal-deep">Total Users</div>
-                        <div class="mt-3 flex items-center gap-2 text-xs text-emerald-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                            +12.5% from last month
-                        </div>
-                    </div>
-
-                    <!-- API Requests Stat -->
-                    <div class="stat-card group cursor-pointer">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="stat-icon group-hover:bg-blue-500/20 group-hover:border-blue-500/50 transition-all duration-300" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2);">
-                                <svg class="w-6 h-6 text-blue-400 group-hover:text-blue-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                            </div>
-                            <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #93C5FD; border-color: rgba(59, 130, 246, 0.3);">Today</span>
-                        </div>
-                        <div class="font-dm-sans font-black text-4xl text-white mb-1" id="val-reqs">0</div>
-                        <div class="text-sm text-charcoal-deep">API Requests</div>
-                        <div class="mt-3 flex items-center gap-2 text-xs text-blue-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                            Avg: 200ms response time
-                        </div>
-                    </div>
-
-                    <!-- Success Rate Stat -->
-                    <div class="stat-card group cursor-pointer">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="stat-icon group-hover:bg-emerald-500/20 group-hover:border-emerald-500/50 transition-all duration-300" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2);">
-                                <svg class="w-6 h-6 text-emerald-400 group-hover:text-emerald-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="font-dm-sans font-black text-4xl text-emerald-400 mb-1">99.98%</div>
-                        <div class="text-sm text-charcoal-deep">Success Rate</div>
-                        <div class="mt-3 flex items-center gap-2 text-xs text-emerald-400">
-                            <span class="status-pulse inline-block w-2 h-2 bg-emerald-500 rounded-full"></span>
-                            All systems healthy
-                        </div>
-                    </div>
-
-                    <!-- Active Status -->
-                    <div class="stat-card group cursor-pointer">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="stat-icon group-hover:bg-purple-500/20 group-hover:border-purple-500/50 transition-all duration-300" style="background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.2);">
-                                <svg class="w-6 h-6 text-purple-400 group-hover:text-purple-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="font-dm-sans font-black text-2xl text-purple-400 mb-1 flex items-center gap-2">
-                            <span class="status-pulse inline-block w-3 h-3 bg-emerald-500 rounded-full"></span>
-                            Active
-                        </div>
-                        <div class="text-sm text-charcoal-deep">Service Status</div>
-                        <div class="mt-3 text-xs text-gray-500">
-                            Uptime: 99.99%
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Two Column Layout: API Test & Config -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    
-                    <!-- Left Column: API Test Section -->
-                    <div class="dashboard-card">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-10 h-10 bg-yellow-500/20 border border-yellow-500/30 rounded-xl flex items-center justify-center">
-                                <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="font-dm-sans font-bold text-xl text-white">Test Your API</h3>
-                                <p class="text-sm text-charcoal-deep">Send a test OTP email to verify backend connectivity</p>
-                            </div>
-                        </div>
-
-                        <div class="test-section">
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-300 mb-2">Target Email Address</label>
-                                    <input type="email" id="test-email" class="input-field" placeholder="Enter email (e.g., you@gmail.com)">
-                                </div>
-                                
-                                <button onclick="sendTestOTP()" class="btn-success w-full">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                                    </svg>
-                                    Send Test OTP
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Response Log -->
-                        <div class="mt-6">
-                            <div class="flex items-center justify-between mb-3">
-                                <span class="text-sm font-semibold text-gray-400">Response Log</span>
-                                <span class="text-xs text-gray-600 font-mono">JSON Output</span>
-                            </div>
-                            <div class="code-block">
-                                <div class="code-header">
-                                    <div class="code-dot bg-[#FF5F57]"></div>
-                                    <div class="code-dot bg-[#FEBC2E]"></div>
-                                    <div class="code-dot bg-[#28C840]"></div>
-                                    <span class="ml-4 text-xs text-gray-500 font-space-mono">response.json</span>
-                                </div>
-                                <pre id="response-log" class="code-content text-gray-500">// Response will appear here...</pre>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Configuration -->
-                    <div class="dashboard-card">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-10 h-10 bg-crimson-brand/20 border border-crimson-brand/30 rounded-xl flex items-center justify-center">
-                                <svg class="w-5 h-5 text-crimson-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.329c1.362 0 2.215 0 2.63.095.461.106.897.304 1.256.663.359.359.557.795.663 1.256.095.415.095 1.268.095 2.63 0 1.362 0 2.215-.095 2.63-.095.461-.106.897-.304 1.256-.663.359-.359.557-.795.663-1.256.095-.415.095-1.268.095-2.63 0-1.362 0-2.215.095-2.63.095-.461.106-.897.304-1.256.663-.359.359-.557.795-.663 1.256-.095.415-.095 1.268-.095 2.63zM12 16a4 4 0 100-8 4 4 0 000 8zM15 8a1 1 0 100-2 1 1 0 000 2z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="font-dm-sans font-bold text-xl text-white">Configuration</h3>
-                                <p class="text-sm text-charcoal-deep">API endpoints and keys management</p>
-                            </div>
-                        </div>
-
-                        <div class="space-y-6">
-                            
-                            <!-- Endpoint URL -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-300 mb-2">API Endpoint URL</label>
-                                <div class="config-code" id="api-url-display">
-                                    https://workers.luviio.com/api/send-otp
-                                </div>
-                                <button onclick="copyToClipboard('https://workers.luviio.com/api/send-otp')" class="mt-2 text-xs text-crimson-brand hover:text-crimson-dark font-medium transition-colors flex items-center gap-1">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    Copy to clipboard
-                                </button>
-                            </div>
-
-                            <!-- API Key -->
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <label class="block text-sm font-semibold text-gray-300">Secret API Key</label>
-                                    <button onclick="alert('New key generated! sk_live_' + Math.random().toString(36).substr(2, 16))" class="text-xs bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white px-3 py-1.5 rounded-lg border border-white/10 transition-all font-mono">
-                                        Regenerate
-                                    </button>
-                                </div>
-                                <div class="config-code" style="color: #FF6B5B;">
-                                    sk_live_12345xxxxxxxxxxxx
-                                </div>
-                                <p class="mt-2 text-xs text-gray-600 flex items-center gap-2">
-                                    <svg class="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.85 3.963-1.125.96.58 1.596 1.61 1.722 2.692.104.91.07 1.886-.148 2.79-.392 1.172-.95 2.23-1.67 3.108-.76.94-1.77 1.49-2.89 1.564-.45.03-.92.007-1.37-.094-.443-.1-.87-.278-1.245-.53-.404-.27-.74-.62-1.001-1.006-.264-.39-.43-.84-.49-1.31-.058-.47-.04-.95.04-1.41.09-.46.26-.9.51-1.29.25-.38.57-.72.94-.99.37-.27.78-.48 1.22-.64.44-.16.9-.26 1.37-.31.47-.05.95-.04 1.41.04.46.09.9.26 1.29.51.38.25.72.57.99.94.27.37.48.78.64 1.22.16.44.26.9.31 1.37.05.47.04.95-.04 1.41-.09.46-.26.9-.51 1.29-.25.38-.57.72-.94.99-.37.27-.78.48-1.22.64-.44.16-.9.26-1.37.31-.47.05-.95.04-1.41-.04-.46-.09-.9-.26-1.29-.51-.38-.25-.72-.57-.99-.94-.27-.37-.48-.78-.64-1.22-.16-.44-.26-.9-.31-1.37zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4 0 2.21-1.79 4-4 4z" clip-rule="evenodd"></path></svg>
-                                    Keep this secret. Never expose in client-side code.
-                                </p>
-                            </div>
-
-                            <!-- Rate Limit Info -->
-                            <div class="p-4 bg-white/5 rounded-xl border border-white/10">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-semibold text-gray-300">Rate Limit</span>
-                                    <span class="text-xs text-emerald-400 font-mono">Healthy</span>
-                                </div>
-                                <div class="text-sm text-gray-400 mb-3">1,000 requests / minute</div>
-                                <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
-                                    <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full" style="width: 12%;"></div>
-                                </div>
-                                <p class="text-xs text-gray-600 mt-2 text-right">124 / 1,000 used this minute</p>
-                            </div>
-
-                            <!-- Quick Actions -->
-                            <div class="pt-4 border-t border-gray-800 space-y-3">
-                                <button class="btn-secondary w-full text-sm">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    View Full Documentation
-                                </button>
-                                <button class="btn-secondary w-full text-sm">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    View Usage Analytics
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Activity Table (Optional Enhancement) -->
-                <div class="dashboard-card mt-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="font-dm-sans font-bold text-xl text-white">Recent Activity</h3>
-                        <button class="text-sm text-crimson-brand hover:text-crimson-dark font-medium transition-colors">View All →</button>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead>
-                                <tr class="border-b border-gray-800">
-                                    <th class="pb-3 text-xs uppercase tracking-wider text-gray-500 font-semibold">Event</th>
-                                    <th class="pb-3 text-xs uppercase tracking-wider text-gray-500 font-semibold">Email</th>
-                                    <th class="pb-3 text-xs uppercase tracking-wider text-gray-500 font-semibold">Status</th>
-                                    <th class="pb-3 text-xs uppercase tracking-wider text-gray-500 font-semibold">Time</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-sm" id="activity-table-body">
-                                <tr class="border-b border-gray-800/50 hover:bg-white/[0.02] transition-colors">
-                                    <td class="py-4 text-gray-300">OTP Sent</td>
-                                    <td class="py-4 font-mono text-gray-400">user***@gmail.com</td>
-                                    <td class="py-4"><span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full">Delivered</span></td>
-                                    <td class="py-4 text-gray-500 font-mono">2 min ago</td>
-                                </tr>
-                                <tr class="border-b border-gray-800/50 hover:bg-white/[0.02] transition-colors">
-                                    <td class="py-4 text-gray-300">Verification</td>
-                                    <td class="py-4 font-mono text-gray-400">admin***@company.my</td>
-                                    <td class="py-4"><span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-bold rounded-full">Verified</span></td>
-                                    <td class="py-4 text-gray-500 font-mono">5 min ago</td>
-                                </tr>
-                                <tr class="hover:bg-white/[0.02] transition-colors">
-                                    <td class="py-4 text-gray-300">OTP Sent</td>
-                                    <td class="py-4 font-mono text-gray-400">test***@yahoo.com</td>
-                                    <td class="py-4"><span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-full">Pending</span></td>
-                                    <td class="py-4 text-gray-500 font-mono">8 min ago</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-        </main>
-    </div>
-
+    <!-- LOGIC -->
     <script>
-        // ==========================================
-        // CONFIGURATION
-        // ==========================================
-        const WORKER_URL = 'https://workers.luviio.com';
-        
-        // Mock Data
-        let stats = { users: 1240, reqs: 58 };
+        // CONFIG
+        const API_URL = 'https://workers.luviio.com'; // Your Worker URL
+        let currentUser = null;
 
-        // ==========================================
-        // AUTHENTICATION FUNCTIONS
-        // ==========================================
-        function handleLogin() {
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-pass').value;
-            
-            if(email && pass) {
-                // Simulate loading state
-                const btn = event.target.querySelector('button[type="submit"]');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 9.293A8.001 8.001 0 0016.707 11.293L12 6.586l-4.707 4.707A8.001 8.001 0 0014 21.293z"></path></svg> Authenticating...';
-                btn.disabled = true;
+        // --- UI SWITCHING ---
+        function switchTab(tab) {
+            const loginForm = document.getElementById('form-login');
+            const regForm = document.getElementById('form-register');
+            const tabLogin = document.getElementById('tab-login');
+            const tabReg = document.getElementById('tab-register');
 
-                setTimeout(() => {
-                    document.getElementById('login-view').style.display = 'none';
-                    document.getElementById('dashboard-view').style.display = 'block';
-                    updateStats();
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }, 800);
+            if(tab === 'login') {
+                loginForm.classList.remove('hidden'); regForm.classList.add('hidden');
+                tabLogin.classList.replace('text-slate-400','text-white'); tabLogin.classList.add('bg-brand-600');
+                tabReg.classList.replace('text-white','text-slate-400'); tabReg.classList.remove('bg-brand-600');
             } else {
-                // Shake animation for error
-                const card = document.querySelector('#login-view .dashboard-card');
-                card.style.animation = 'shake 0.5s ease-in-out';
-                setTimeout(() => card.style.animation = '', 500);
-                alert("Please enter valid credentials");
+                regForm.classList.remove('hidden'); loginForm.classList.add('hidden');
+                tabReg.classList.replace('text-slate-400','text-white'); tabReg.classList.add('bg-brand-600');
+                tabLogin.classList.replace('text-white','text-slate-400'); tabLogin.classList.remove('bg-brand-600');
             }
         }
 
-        function logout() {
-            document.getElementById('dashboard-view').style.display = 'none';
-            document.getElementById('login-view').style.display = 'flex';
-            document.getElementById('admin-email').value = '';
-            document.getElementById('admin-pass').value = '';
-        }
+        // --- AUTH HANDLERS ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            const errBox = document.getElementById('l-error');
+            errBox.classList.add('hidden');
 
-        // ==========================================
-        // DASHBOARD FUNCTIONS
-        // ==========================================
-        function updateStats() {
-            // Animate numbers
-            animateValue('val-users', 0, stats.users, 1500);
-            animateValue('val-reqs', 0, stats.reqs, 1200);
-        }
-
-        function animateValue(id, start, end, duration) {
-            const obj = document.getElementById(id);
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const value = Math.floor(progress * (end - start) + start);
-                obj.textContent = value.toLocaleString();
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        async function sendTestOTP() {
-            const email = document.getElementById('test-email').value;
-            const logBox = document.getElementById('response-log');
-            const btn = event.target;
-            
-            if(!email) {
-                logBox.innerHTML = '<span style="color: #EF4444;">⚠️ Error: Please enter an email address</span>';
-                return;
-            }
-
-            // Update UI state
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 9.293A8.001 8.001 0 0016.707 11.293L12 6.586l-4.707 4.707A8.001 8.001 0 0014 21.293z"></path></svg>Sending...';
+            const btn = e.target.querySelector('button');
+            btn.innerText = "Authenticating...";
             btn.disabled = true;
-            logBox.innerHTML = '<span style="color: #FBBF24;">⏳ Sending request to endpoint...</span>';
 
             try {
-                const response = await fetch(`${WORKER_URL}/api/send-otp`, {
+                const res = await fetch(`${API_URL}/api/admin/login`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        email: email,
-                        apiKey: 'test-key'
+                    body: JSON.stringify({
+                        email: document.getElementById('l-email').value,
+                        password: document.getElementById('l-pass').value
                     })
                 });
+                const data = await res.json();
 
-                const data = await response.json();
-                
-                // Pretty print JSON with syntax highlighting simulation
-                const jsonString = JSON.stringify(data, null, 2)
-                    .replace(/"([^"]+)":/g, '<span style="color: #9CA3AF;">"$1"</span>:')
-                    .replace(/: "([^"]*)"/g, ': <span style="color: #10B981;">"$1"</span>')
-                    .replace(/: (\d+)/g, ': <span style="color: #60A5FA;">$1</span>')
-                    .replace(/: (true|false)/g, ': <span style="color: #F59E0B;">$1</span>');
-                
-                logBox.innerHTML = jsonString;
-
-                if(response.ok) {
-                    stats.reqs++;
-                    updateStats();
-                    logBox.style.color = '#10B981'; // Green for success
+                if(data.success) {
+                    currentUser = data.user;
+                    initDashboard();
                 } else {
-                    logBox.style.color = '#EF4444'; // Red for error
+                    errBox.innerText = data.error || "Login failed";
+                    errBox.classList.remove('hidden');
                 }
-            } catch (error) {
-                logBox.innerHTML = `<span style="color: #EF4444;">❌ Network Error: ${error.message}</span>`;
-                logBox.style.color = '#EF4444';
+            } catch(err) {
+                errBox.innerText = "Network error";
+                errBox.classList.remove('hidden');
             } finally {
-                btn.innerHTML = originalText;
+                btn.innerText = "Access Dashboard";
                 btn.disabled = false;
             }
         }
 
-        // ==========================================
-        // UTILITY FUNCTIONS
-        // ==========================================
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                // Visual feedback could be added here
-                alert('Copied to clipboard: ' + text);
-            });
+        async function handleRegister(e) {
+            e.preventDefault();
+            const errBox = document.getElementById('r-error');
+            errBox.classList.add('hidden');
+
+            // Simple client-side restriction logic could go here
+            // For now, we allow it as per instructions (Superadmin creates account)
+            
+            const btn = e.target.querySelector('button');
+            btn.innerText = "Creating Account...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        email: document.getElementById('r-email').value,
+                        password: document.getElementById('r-pass').value,
+                        companyName: document.getElementById('r-company').value
+                    })
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    alert("Account created! Please login.");
+                    switchTab('login');
+                    document.getElementById('l-email').value = document.getElementById('r-email').value;
+                } else {
+                    errBox.innerText = data.error || "Registration failed";
+                    errBox.classList.remove('hidden');
+                }
+            } catch(err) {
+                 errBox.innerText = "Network error";
+                 errBox.classList.remove('hidden');
+            } finally {
+                btn.innerText = "Create Account";
+                btn.disabled = false;
+            }
         }
 
-        // Add shake animation for login error
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-10px); }
-                75% { transform: translateX(10px); }
-            }
-        `;
-        document.head.appendChild(style);
+        // --- DASHBOARD FUNCTIONS ---
+        function initDashboard() {
+            document.getElementById('auth-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
+            
+            // Populate User Data
+            document.getElementById('dash-name').innerText = currentUser.companyName || "Admin";
+            document.getElementById('nav-user').innerText = currentUser.email;
+            document.getElementById('api-key-display').value = currentUser.apiKey;
+            document.getElementById('set-company').value = currentUser.companyName || "";
+        }
 
-        // Initialize with mock data if needed
-        document.addEventListener('DOMContentLoaded', () => {
-            // Pre-fill for demo purposes (remove in production)
-            console.log('Auth2U Dashboard Initialized');
-        });
+        function logout() {
+            currentUser = null;
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('auth-view').style.display = 'flex';
+            // Reset forms
+            document.getElementById('l-email').value = '';
+            document.getElementById('l-pass').value = '';
+        }
+
+        async function sendTestOTP() {
+            const email = document.getElementById('test-email').value;
+            const log = document.getElementById('response-log');
+            if(!email) return alert("Enter email");
+            
+            log.classList.remove('hidden');
+            log.innerText = "Sending...";
+
+            try {
+                const res = await fetch(`${API_URL}/api/send-otp`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        email: email, 
+                        apiKey: currentUser.apiKey 
+                    })
+                });
+                const data = await res.json();
+                log.innerText = JSON.stringify(data, null, 2);
+                
+                if(res.ok) {
+                    document.getElementById('stat-reqs').innerText = parseInt(document.getElementById('stat-reqs').innerText) + 1;
+                }
+            } catch(err) {
+                log.innerText = "Error: " + err.message;
+            }
+        }
+
+        async function saveSettings() {
+            const msg = document.getElementById('settings-msg');
+            msg.classList.add('hidden');
+            
+            // In a real app, we would send a PUT request here.
+            // For now, we simulate saving and update local state.
+            /*
+            await fetch(`${API_URL}/api/admin/settings`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    token: currentUser.token,
+                    senderEmail: document.getElementById('set-sender').value,
+                    companyName: document.getElementById('set-company').value,
+                    otpTemplate: document.getElementById('set-otp-tpl').value,
+                    magicLinkTemplate: document.getElementById('set-link-tpl').value
+                })
+            });
+            */
+           
+            // Simulate save delay
+            const btn = event.target;
+            btn.innerText = "Saving...";
+            setTimeout(() => {
+                btn.innerText = "Save Configuration";
+                msg.classList.remove('hidden');
+                currentUser.companyName = document.getElementById('set-company').value;
+                document.getElementById('dash-name').innerText = currentUser.companyName;
+            }, 800);
+        }
+
+        function copyKey() {
+            navigator.clipboard.writeText(document.getElementById('api-key-display').value);
+            alert("API Key copied!");
+        }
     </script>
 </body>
 </html>

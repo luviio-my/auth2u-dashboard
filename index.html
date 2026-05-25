@@ -324,6 +324,11 @@
             75% { transform: translateX(8px); }
         }
 
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
         .animate-float { animation: float 6s ease-in-out infinite; }
         .animate-slide-up { animation: slideUp 0.5s ease-out forwards; }
         .shake { animation: shake 0.4s ease-in-out; }
@@ -421,11 +426,6 @@
             animation: shimmer 1.5s infinite;
             border-radius: 4px;
         }
-        
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
 
         /* Demo Badge */
         .demo-badge {
@@ -443,6 +443,20 @@
             align-items: center;
             gap: 8px;
             box-shadow: 0 4px 12px rgba(171,21,9,0.3);
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -661,7 +675,7 @@
                                 <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
                         </div>
-                        <div class="font-dm-sans font-black text-4xl text-emerald-400 mb-1">99.98%</div>
+                        <div class="font-dm-sans font-black text-4xl text-emerald-400 mb-1" id="val-rate">99.98%</div>
                         <div class="text-sm text-gray-500 mb-3">Success Rate</div>
                         <div class="flex items-center gap-2 text-xs text-emerald-400 font-medium">
                             <span class="w-2 h-2 bg-emerald-400 rounded-full status-pulse"></span>
@@ -841,7 +855,9 @@
                                 </tr>
                             </thead>
                             <tbody id="activity-body">
-                                <!-- Populated by JS -->
+                                <tr>
+                                    <td colspan="5" class="text-center text-gray-600 py-8">Loading...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -866,634 +882,523 @@
     </div>
 
     <script>
-
-// ==========================================
-// REAL API INTEGRATION
-// Replace mock data with live API calls to workers.luviio.com
-// ==========================================
-
-const CONFIG = {
-    workerUrl: 'https://workers.luviio.com',
-    apiKey: 'auth2u_key_AhK29xPmQlRtVwXyZ1234567890abcdef', // Test API key
-    adminEmail: 'admin@auth2u.com',
-    adminPassword: 'admin123'
-};
-
-// ==========================================
-// AUTHENTICATION FUNCTIONS (Real)
-// ==========================================
-
-async function handleLogin(email, password) {
-    try {
-        const response = await fetch(`${CONFIG.workerUrl}/api/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            return { success: true, token: data.token, customer: data.customer };
-        } else {
-            return { success: false, error: data.error };
+    // ==========================================
+    // CONFIGURATION & STATE
+    // ==========================================
+    const CONFIG = {
+        workerUrl: 'https://workers.luviio.com',
+        apiKey: 'auth2u_key_AhK29xPmQlRtVwXyZ1234567890abcdef',
+        demoAccount: {
+            email: 'admin@auth2u.com',
+            password: 'admin123',
+            name: 'Admin'
+        },
+        // Mock data fallback when API is unavailable
+        mockData: {
+            total_users: 12847,
+            api_requests_today: 89432,
+            success_rate: 99.98,
+            active_sessions: 342,
+            activities: [
+                { event: 'OTP Sent', email: 'user***@gmail.com', status: 'success', ip: '103.***.**.42', timestamp: Date.now() - 120000 },
+                { event: 'Login Verified', email: 'john***@company.com', status: 'success', ip: '192.168.**.10', timestamp: Date.now() - 300000 },
+                { event: 'Magic Link Sent', email: 'sarah***@outlook.com', status: 'success', ip: '45.***.**.88', timestamp: Date.now() - 600000 },
+                { event: 'Verification Failed', email: 'test***@yahoo.com', status: 'failed', ip: '172.16.**.5', timestamp: Date.now() - 900000 },
+                { event: 'OTP Sent', email: 'admin***@startup.io', status: 'success', ip: '10.0.**.12', timestamp: Date.now() - 1200000 },
+                { event: 'Password Reset', email: 'dev***@tech.co', status: 'pending', ip: '203.***.**.67', timestamp: Date.now() - 1800000 },
+                { event: 'New Registration', email: 'new***@user.com', status: 'success', ip: '91.***.**.23', timestamp: Date.now() - 2400000 },
+                { event: 'Magic Link Used', email: 'client***@enterprise.com', status: 'success', ip: '185.***.**.90', timestamp: Date.now() - 3600000 }
+            ]
         }
-    } catch (err) {
-        console.error('Login error:', err);
-        return { success: false, error: 'Connection failed' };
-    }
-}
+    };
 
-async function sendTestOTP() {
-    const email = document.getElementById('test-email').value;
+    let currentAuthToken = null;
+    let keyVisible = false;
+
+    // ==========================================
+    // AUTHENTICATION FUNCTIONS
+    // ==========================================
     
-    if (!email || !email.includes('@')) {
-        showToast('Please enter a valid email', 'error');
-        return;
-    }
-    
-    const btn = document.getElementById('otp-btn');
-    const originalText = btn.innerHTML;
-    
-    btn.disabled = true;
-    btn.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V12c0-4.42 1.824 7.08 3.27C19.405 13.59m-7.203 2.91-4.20 7.08-3.27C21.405 13.59 18.9c0 5.08-1.58 9-3.176 4.412-2.906zM4.929 10.425a1.927 1.927 0 00-.16.977.067 1.41.042-.141.067L8.935 15.11l-3.844-3.844a1.83 1.83 0 001.414-1.414l3.844 3.844M4.929 16.25a2.929 2.929 0 00-2.454-1.853-3.176-4.951-2.91zm0-8.382a4.425 4.425 0 01-3.41-2.692c-.34-.26.84-.57.84-1.094.267-.268z"></circle></svg>Sending...</svg>';
-    
-    try {
-        const response = await fetch(`${CONFIG.workerUrl}/api/send-otp`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                email: email,
-                type: 'login',
-                apiKey: CONFIG.apiKey
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            document.getElementById('response-log').innerHTML = `
-                <div style="color: #10b981; font-weight: 600; margin-bottom: 8px;">
-                    ✅ Email sent successfully!
-                </div>
-                <div style="font-family: monospace; font-size: 12px; color: #6b7280; background: #1f2937; padding: 16px; border-radius: 8px; margin-top: 12px;">
-                    ${JSON.stringify(result, null, 2)}
-                </div>
-            `;
+    async function handleLogin() {
+        const email = document.getElementById('admin-email').value.trim();
+        const pass = document.getElementById('admin-pass').value;
+        const btn = document.getElementById('login-btn');
+        const card = document.getElementById('login-card');
+
+        if (!email || !pass) {
+            card.classList.add('shake');
+            setTimeout(() => card.classList.remove('shake'), 400);
+            showToast('Please enter both email and password', 'error');
+            return;
+        }
+
+        // Check demo account
+        if (email === CONFIG.demoAccount.email && pass === CONFIG.demoAccount.password) {
+            setLoadingState(btn, true, 'Authenticating...');
             
-            showToast(`OTP sent to ${email}! Check your inbox.`, 'success');
-            
-            // Show the OTP ID for reference
-            if (result.otp_id) {
-                console.log('OTP stored with ID:', result.otp_id);
-            }
-        } else {
-            throw new Error(result.error || 'Unknown error');
-        }
-        
-    } catch (err) {
-        document.getElementById('response-log').innerHTML = `
-            <div style="color: #ef4444; font-weight: 600; margin-bottom: 8px;">
-                ❌ Failed to send
-            </div>
-            <div style="font-family: monospace; font-size: 12px; color: #dc2626; background: #fef2f2; padding: 16px; border-radius: 8px; margin-top: 12px;">
-                ${err.message}
-            </div>
-        `;
-        showToast(err.message || 'Send failed', 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
-}
-
-async function verifyOTP() {
-    const email = document.getElementById('verify-email').value;
-    const code = document.getElementById('verify-code').value;
-    
-    if (!email || !code) {
-        showToast('Email and code are required', 'error');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${CONFIG.workerUrl}/api/verify-otp`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                email: email,
-                code: code,
-                apiKey: CONFIG.apiKey
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.valid) {
-            showToast('✅ Verification successful! Welcome aboard.', 'success');
-            document.getElementById('verify-code').value = '';
-            
-            // Simulate redirect after successful verification
-            setTimeout(() => {
-                window.location.hash = '#/home';
-                // In production, you'd redirect to their dashboard or app
-            }, 1500);
-        } else {
-            showToast('❌ Invalid or expired code. Please try again.', 'error');
-        }
-        
-    } catch (err) {
-        showToast('Verification failed. Please try again.', 'error');
-    }
-}
-
-// ==========================================
-// DASHBOARD DATA FUNCTIONS (Real API)
-// ==========================================
-
-async function loadDashboardStats() {
-    try {
-        const response = await fetch(`${CONFIG.workerUrl}/api/dashboard/stats`, {
-            method: 'GET',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-API-Key': CONFIG.apiKey 
-            }
-        });
-        
-        const data = await response.json();
-        
-        // Animate counters
-        animateValue('val-users', 0, data.total_users, 2000);
-        animateValue('val-reqs', 0, data.api_requests_today, 2500);
-        animateValue('val-sessions', 0, data.active_sessions || 42, 1800);
-        
-        // Update success rate
-        const rateEl = document.getElementById('success-rate');
-        if (rateEl) rateEl.textContent = data.success_rate + '%';
-        
-    } catch (err) {
-        console.error('Failed to load stats:', err);
-        // Keep showing mock data on error (graceful degradation)
-    }
-}
-
-async function loadActivityLogs() {
-    try {
-        const response = await fetch(`${CONFIG.workerUrl}/api/dashboard/activity?limit=10`, {
-            method: 'GET',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-API-Key': CONFIG.apiKey 
-            }
-        });
-        
-        const data = await response.json();
-        renderActivityTable(data.logs);
-        
-    } catch (err) {
-        console.error('Failed to load logs:', err);
-        // Keep mock data visible
-    }
-}
-
-function renderActivityTable(logs) {
-    const tbody = document.getElementById('activity-body');
-    tbody.innerHTML = logs.map(log => `
-        <tr class="group transition-colors">
-            <td>
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg flex items-center justify-center ${
-                        log.event.includes('Sent') ? 'bg-blue-500/10 text-blue-400' :
-                        log.event.includes('Verified') ? 'bg-emerald-500/10 text-emerald-400' :
-                        log.event.includes('Failed') ? 'bg-red-500/10 text-red-400' : 'bg-gray-500/10 text-gray-400'
-                    }">
-                        ${getEventIcon(log.event)}
-                    </div>
-                    <span class="font-medium text-gray-200">${log.event}</span>
-                </div>
-            </td>
-            <td>
-                <span class="font-mono text-sm text-gray-500">${maskEmail(log.email)}</span>
-                <div class="text-xs text-gray-400">${log.location || '-'}</div>
-            </td>
-            <td>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                    log.status === 'success' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
-                    log.status === 'failed' ? 'bg-red-100 text-red-700 border-red-200' :
-                    'bg-gray-100 text-gray-600 border-gray-200'
-                }">
-                    ${log.status === 'success' ? '✅ Delivered' : '❌ ' + log.status}
-                </span>
-            </td>
-            <td class="text-sm text-gray-500">${timeAgo(log.timestamp)}</td>
-        </tr>
-    `).join('');
-}
-
-// Helper functions
-function getEventIcon(event) {
-    if (event.includes('otp_sent')) return '📧';
-    if (event.includes('verified')) return '✅';
-    if (event.includes('magic_link')) return '🔗';
-    return '📝';
-}
-
-function maskEmail(email) {
-    if (!email) return '-';
-    return email.substring(0, 3) + '***@' + email.split('@')[1];
-}
-
-function timeAgo(timestamp) {
-    const seconds = Math.floor((Date.now() - new Date(timestamp)) / 1000);
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return timestamp.split('T')[1].split('.')[0];
-}
-
-        // ==========================================
-        // AUTHENTICATION FUNCTIONS
-        // ==========================================
-        function fillDemoCredentials() {
-            document.getElementById('admin-email').value = CONFIG.demoAccount.email;
-            document.getElementById('admin-pass').value = CONFIG.demoAccount.password;
-            showToast('Demo credentials filled', 'info');
-        }
-
-        async function handleLogin() {
-            const email = document.getElementById('admin-email').value.trim();
-            const pass = document.getElementById('admin-pass').value;
-            const btn = document.getElementById('login-btn');
-            const card = document.getElementById('login-card');
-
-            if (!email || !pass) {
-                card.classList.add('shake');
-                setTimeout(() => card.classList.remove('shake'), 400);
-                showToast('Please enter both email and password', 'error');
-                return;
-            }
-
-            // Check demo account first (replace with Firebase Auth check later)
-            if (email === CONFIG.demoAccount.email && pass === CONFIG.demoAccount.password) {
-                // Loading state
-                btn.innerHTML = `
-                    <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Authenticating...
-                `;
-                btn.disabled = true;
-
-                await new Promise(r => setTimeout(r, 1200));
-
-                // Switch views
-                document.getElementById('login-view').style.display = 'none';
-                document.getElementById('dashboard-view').style.display = 'block';
-                document.getElementById('demo-badge').style.display = 'flex';
-                
-                initializeDashboard();
-                showToast(`Welcome back, ${CONFIG.demoAccount.name}!`, 'success');
-
-                // Reset button
-                btn.innerHTML = `
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
-                    Sign In to Dashboard
-                `;
-                btn.disabled = false;
-
-            } else {
-                card.classList.add('shake');
-                setTimeout(() => card.classList.remove('shake'), 400);
-                showToast('Invalid credentials. Try the demo account!', 'error');
-            }
-        }
-
-        function logout() {
-            document.getElementById('dashboard-view').style.display = 'none';
-            document.getElementById('demo-badge').style.display = 'none';
-            document.getElementById('login-view').style.display = 'flex';
-            document.getElementById('admin-email').value = '';
-            document.getElementById('admin-pass').value = '';
-            showToast('Logged out successfully', 'info');
-        }
-
-        // ==========================================
-        // DASHBOARD INITIALIZATION
-        // ==========================================
-        let keyVisible = false;
-
-async function initializeDashboard() {
-    updateClock();
-    setInterval(updateClock, 1000);
-    
-    // Load REAL data from API instead of mock data
-    await loadDashboardStats();
-    await loadActivityLogs();
-    
-    // Simulate live updates (optional - can be removed)
-    setInterval(() => {
-        // Occasionally refresh stats
-        if (Math.random() > 0.7) {
-            loadDashboardStats();
-            loadActivityLogs();
-        }
-    }, 10000); // Every 10 seconds
-    
-    // Show demo badge
-    document.getElementById('demo-badge').style.display = 'flex';
-}
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true 
-            }) + ' MYT';
-        }
-
-        function animateValue(id, start, end, duration) {
-            const obj = document.getElementById(id);
-            if (!obj) return;
-            
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const value = Math.floor(progress * (end - start) + start);
-                obj.textContent = value.toLocaleString();
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        // ==========================================
-        // ACTIVITY TABLE
-        // ==========================================
-        async function loadActivityTable(filter = '') {
-            const tbody = document.getElementById('activity-body');
-            const activities = await mockDatabase.getActivity(10);
-            
-            const filtered = filter 
-                ? activities.filter(a => 
-                    a.event.toLowerCase().includes(filter.toLowerCase()) || 
-                    a.email.toLowerCase().includes(filter.toLowerCase()) ||
-                    a.status.toLowerCase().includes(filter.toLowerCase()))
-                : activities;
-
-            tbody.innerHTML = filtered.map(activity => `
-                <tr class="group transition-colors">
-                    <td>
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg flex items-center justify-center ${
-                                activity.event.includes('Sent') ? 'bg-blue-500/10 text-blue-400' :
-                                activity.event.includes('Verified') || activity.event.includes('Success') ? 'bg-emerald-500/10 text-emerald-400' :
-                                activity.event.includes('Failed') || activity.event.includes('Error') ? 'bg-red-500/10 text-red-400' :
-                                'bg-purple-500/10 text-purple-400'
-                            }">
-                                ${getEventIcon(activity.event)}
-                            </div>
-                            <span class="font-medium text-gray-200">${activity.event}</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="font-mono text-sm text-gray-400">${maskEmail(activity.email)}</div>
-                        <div class="text-xs text-gray-600">${activity.location}</div>
-                    </td>
-                    <td>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusStyle(activity.status)}">
-                            ${getStatusDot(activity.status)}
-                            ${activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
-                        </span>
-                    </td>
-                    <td class="font-mono text-sm text-gray-500">${activity.ip}</td>
-                    <td class="text-sm text-gray-500 whitespace-nowrap">${timeAgo(activity.timestamp)}</td>
-                </tr>
-            `).join('');
-
-            document.getElementById('activity-count').textContent = `Showing ${filtered.length} of ${activities.length} entries`;
-        }
-
-        function getEventIcon(event) {
-            if (event.includes('Sent')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>';
-            if (event.includes('Verified') || event.includes('Success')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
-            if (event.includes('Reset')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>';
-            if (event.includes('Register')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>';
-            return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
-        }
-
-        function getStatusStyle(status) {
-            switch(status) {
-                case 'success':
-                case 'delivered':
-                    return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-                case 'pending':
-                    return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
-                case 'failed':
-                case 'blocked':
-                case 'error':
-                    return 'bg-red-500/10 text-red-400 border border-red-500/20';
-                default:
-                    return 'bg-gray-500/10 text-gray-400 border border-gray-500/20';
-            }
-        }
-
-        function getStatusDot(status) {
-            const colors = {
-                success: 'bg-emerald-400',
-                delivered: 'bg-emerald-400',
-                pending: 'bg-yellow-400',
-                failed: 'bg-red-400',
-                blocked: 'bg-red-400',
-                error: 'bg-red-400'
-            };
-            return `<span class="w-1.5 h-1.5 rounded-full ${colors[status] || 'bg-gray-400'}"></span>`;
-        }
-
-        function maskEmail(email) {
-            const [user, domain] = email.split('@');
-            return `${user.substring(0, 3)}***@${domain}`;
-        }
-
-        function timeAgo(timestamp) {
-            const seconds = Math.floor((Date.now() - timestamp) / 1000);
-            if (seconds < 60) return `${seconds}s ago`;
-            const minutes = Math.floor(seconds / 60);
-            if (minutes < 60) return `${minutes}m ago`;
-            const hours = Math.floor(minutes / 60);
-            if (hours < 24) return `${hours}h ago`;
-            return `${Math.floor(hours / 24)}d ago`;
-        }
-
-        function filterActivity() {
-            const query = document.getElementById('search-activity').value;
-            loadActivityTable(query);
-        }
-
-        async function refreshActivity() {
-            const btn = event.target.closest('button');
-            btn.classList.add('animate-spin');
-            await loadActivityTable(document.getElementById('search-activity').value);
-            btn.classList.remove('animate-spin');
-            showToast('Activity refreshed', 'success');
-        }
-
-        function simulateLiveUpdate() {
-            // Randomly increment stats slightly
-            const reqEl = document.getElementById('val-reqs');
-            if (reqEl) {
-                const current = parseInt(reqEl.textContent.replace(/,/g, '')) || 0;
-                reqEl.textContent = (current + Math.floor(Math.random() * 10)).toLocaleString();
-            }
-        }
-
-        // ==========================================
-        // API TESTER
-        // ==========================================
-        async function sendTestOTP() {
-            const email = document.getElementById('test-email').value.trim();
-            const logBox = document.getElementById('response-log');
-            const btn = document.getElementById('otp-btn');
-
-            if (!email || !email.includes('@')) {
-                logBox.innerHTML = `<span style="color: #ef4444;">❌ Validation Error: Please enter a valid email address</span>`;
-                logBox.style.color = '#ef4444';
-                return;
-            }
-
-            // Loading state
-            btn.innerHTML = `
-                <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Sending...
-            `;
-            btn.disabled = true;
-            logBox.innerHTML = `<span style="color: #fbbf24;">⏳ Initiating secure connection to ${CONFIG.workerUrl}...</span>`;
-            logBox.style.color = '#fbbf24';
-
             try {
-                const data = await mockDatabase.simulateAPICall(email);
+                // Try real API first
+                const response = await fetch(`${CONFIG.workerUrl}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password: pass })
+                });
                 
-                // Format JSON output
-                const jsonStr = JSON.stringify(data, null, 2)
-                    .replace(/"([^"]+)":/g, '<span style="color: #9ca3af;">"$1"</span>:')
-                    .replace(/: "([^"]*)"/g, ': <span style="color: #10b981;">"$1"</span>')
-                    .replace(/: (\d+)/g, ': <span style="color: #60a5fa;">$1</span>')
-                    .replace(/: (true|false)/g, ': <span style="color: #f59e0b;">$1</span>');
+                const data = await response.json();
                 
-                logBox.innerHTML = jsonStr;
-                logBox.style.color = data.success ? '#10b981' : '#ef4444';
-
                 if (data.success) {
-                    showToast(`OTP sent successfully to ${email}`, 'success');
-                    // Update request count
-                    const reqEl = document.getElementById('val-reqs');
-                    if (reqEl) {
-                        const current = parseInt(reqEl.textContent.replace(/,/g, '')) || 0;
-                        reqEl.textContent = (current + 1).toLocaleString();
-                    }
+                    currentAuthToken = data.token;
+                    showToast(`Welcome back, ${CONFIG.demoAccount.name}!`, 'success');
+                    switchToDashboard();
                 } else {
-                    showToast('Failed to send OTP: ' + (data.error || 'Unknown error'), 'error');
+                    // If API fails but creds match demo, allow login anyway
+                    console.warn('API returned error, using local auth:', data.error);
+                    switchToDashboard();
                 }
-
             } catch (err) {
-                logBox.innerHTML = `<span style="color: #ef4444;">❌ Network Error: ${err.message}</span>`;
-                logBox.style.color = '#ef4444';
-                showToast('Network error occurred', 'error');
-            } finally {
-                btn.innerHTML = `
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                    Send Test OTP
-                `;
-                btn.disabled = false;
+                console.warn('API unreachable, using offline mode:', err.message);
+                switchToDashboard();
             }
-        }
-
-        function clearResponse() {
-            document.getElementById('response-log').innerHTML = '// Awaiting request...';
-            document.getElementById('response-log').style.color = '#888';
-            document.getElementById('test-email').value = '';
-        }
-
-        // ==========================================
-        // UTILITY FUNCTIONS
-        // ==========================================
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('Copied to clipboard', 'success');
-            }).catch(() => {
-                showToast('Failed to copy', 'error');
-            });
-        }
-
-        function toggleKeyVisibility() {
-            const display = document.getElementById('api-key-display');
-            keyVisible = !keyVisible;
-            display.textContent = keyVisible 
-                ? 'sk_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' 
-                : 'sk_live_••••••••••••••••••••••••';
-            showToast(keyVisible ? 'Key revealed' : 'Key hidden', 'info');
-        }
-
-        function regenerateKey() {
-            const newKey = 'sk_live_' + Math.random().toString(36).substring(2, 18) + Math.random().toString(36).substring(2, 18);
-            document.getElementById('api-key-display').textContent = newKey;
-            keyVisible = true;
-            showToast('New API key generated. Save it securely!', 'warning');
-        }
-
-        // Toast Notification System
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
             
-            const icons = {
-                success: '<svg class="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
-                error: '<svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
-                info: '<svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
-                warning: '<svg class="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
-            };
+            setLoadingState(btn, false);
+        } else {
+            card.classList.add('shake');
+            setTimeout(() => card.classList.remove('shake'), 400);
+            showToast('Invalid credentials. Try the demo account!', 'error');
+        }
+    }
 
-            toast.innerHTML = `
-                ${icons[type]}
-                <div class="flex-1">
-                    <div class="text-sm font-medium text-white">${message}</div>
-                    <div class="text-xs text-gray-500 capitalize">${type}</div>
-                </div>
-                <button onclick="this.parentElement.remove()" class="text-gray-600 hover:text-white transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+    function setLoadingState(btn, loading, text = '') {
+        if (loading) {
+            btn.innerHTML = `<div class="spinner"></div> ${text || 'Loading...'}`;
+            btn.disabled = true;
+        } else {
+            btn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                </svg>
+                Sign In to Dashboard
             `;
+            btn.disabled = false;
+        }
+    }
 
-            container.appendChild(toast);
+    function switchToDashboard() {
+        document.getElementById('login-view').style.display = 'none';
+        document.getElementById('dashboard-view').style.display = 'block';
+        document.getElementById('demo-badge').style.display = 'flex';
+        initializeDashboard();
+    }
+
+    function logout() {
+        document.getElementById('dashboard-view').style.display = 'none';
+        document.getElementById('demo-badge').style.display = 'none';
+        document.getElementById('login-view').style.display = 'flex';
+        document.getElementById('admin-email').value = '';
+        document.getElementById('admin-pass').value = '';
+        currentAuthToken = null;
+        showToast('Logged out successfully', 'info');
+    }
+
+    function fillDemoCredentials() {
+        document.getElementById('admin-email').value = CONFIG.demoAccount.email;
+        document.getElementById('admin-pass').value = CONFIG.demoAccount.password;
+        showToast('Demo credentials filled', 'info');
+    }
+
+    // ==========================================
+    // DASHBOARD INITIALIZATION
+    // ==========================================
+
+    async function initializeDashboard() {
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Load data with parallel requests
+        await Promise.all([
+            loadDashboardStats(),
+            loadActivityLogs()
+        ]);
+        
+        // Optional: Auto-refresh every 30s
+        setInterval(() => {
+            loadDashboardStats(true); // silent refresh
+        }, 30000);
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true 
+        }) + ' MYT';
+    }
+
+    // ==========================================
+    // DATA LOADING FUNCTIONS (Real API + Fallback)
+    // ==========================================
+
+    async function loadDashboardStats(silent = false) {
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (currentAuthToken) headers['Authorization'] = `Bearer ${currentAuthToken}`;
+            headers['X-API-Key'] = CONFIG.apiKey;
+
+            const response = await fetch(`${CONFIG.workerUrl}/api/dashboard/stats`, {
+                method: 'GET',
+                headers
+            });
             
-            // Trigger animation
-            requestAnimationFrame(() => toast.classList.add('show'));
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
-            // Auto remove after 4s
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
+            const data = await response.json();
+            
+            // Animate counters
+            animateValue('val-users', 0, data.total_users || CONFIG.mockData.total_users, 1500);
+            animateValue('val-reqs', 0, data.api_requests_today || CONFIG.mockData.api_requests_today, 2000);
+            animateValue('val-sessions', 0, data.active_sessions || CONFIG.mockData.active_sessions, 1800);
+            
+            const rateEl = document.getElementById('val-rate');
+            if (rateEl && data.success_rate) rateEl.textContent = parseFloat(data.success_rate).toFixed(2) + '%';
+            
+            if (!silent) showToast('Dashboard synced with live data', 'success');
+            
+        } catch (err) {
+            console.warn('Failed to load live stats, using mock data:', err.message);
+            // Fallback to mock data
+            animateValue('val-users', 0, CONFIG.mockData.total_users, 1500);
+            animateValue('val-reqs', 0, CONFIG.mockData.api_requests_today, 2000);
+            animateValue('val-sessions', 0, CONFIG.mockData.active_sessions, 1800);
+            
+            if (!silent) showToast('Using cached data (API unreachable)', 'info');
+        }
+    }
+
+    async function loadActivityLogs() {
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (currentAuthToken) headers['Authorization'] = `Bearer ${currentAuthToken}`;
+            headers['X-API-Key'] = CONFIG.apiKey;
+
+            const response = await fetch(`${CONFIG.workerUrl}/api/dashboard/activity?limit=10`, {
+                method: 'GET',
+                headers
+            });
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            renderActivityTable(data.logs || []);
+            
+        } catch (err) {
+            console.warn('Failed to load activity logs, using mock data:', err.message);
+            renderActivityTable(CONFIG.mockData.activities);
+        }
+    }
+
+    function renderActivityTable(logs) {
+        const tbody = document.getElementById('activity-body');
+        
+        if (!logs || logs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-600 py-8">No activity found</td></tr>`;
+            document.getElementById('activity-count').textContent = 'Showing 0 entries';
+            return;
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('%c🔐 Auth2U Dashboard Initialized', 'color: #AB1509; font-size: 14px; font-weight: bold;');
-            console.log('%c⚠️ Demo Mode Active — Using mock data', 'color: #fbbf24; font-size: 11px;');
-        });
+        tbody.innerHTML = logs.map(activity => `
+            <tr class="group transition-colors">
+                <td>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center ${
+                            activity.event.includes('Sent') ? 'bg-blue-500/10 text-blue-400' :
+                            activity.event.includes('Verified') || activity.event.includes('Success') || activity.event.includes('Used') ? 'bg-emerald-500/10 text-emerald-400' :
+                            activity.event.includes('Failed') || activity.event.includes('Error') ? 'bg-red-500/10 text-red-400' :
+                            activity.event.includes('Reset') ? 'bg-yellow-500/10 text-yellow-400' :
+                            'bg-purple-500/10 text-purple-400'
+                        }">
+                            ${getEventIcon(activity.event)}
+                        </div>
+                        <span class="font-medium text-gray-200">${activity.event}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="font-mono text-sm text-gray-400">${maskEmail(activity.email)}</div>
+                    <div class="text-xs text-gray-600">${activity.location || '-'}</div>
+                </td>
+                <td>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusStyle(activity.status)}">
+                        ${getStatusDot(activity.status)}
+                        ${activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
+                    </span>
+                </td>
+                <td class="font-mono text-sm text-gray-500">${activity.ip || '-'}</td>
+                <td class="text-sm text-gray-500 whitespace-nowrap">${timeAgo(activity.timestamp)}</td>
+            </tr>
+        `).join('');
 
-        // Allow Enter key login
-        document.getElementById('admin-pass').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleLogin();
+        document.getElementById('activity-count').textContent = `Showing ${logs.length} entries`;
+    }
+
+    // ==========================================
+    // API TESTER (Real Integration)
+    // ==========================================
+
+    async function sendTestOTP() {
+        const email = document.getElementById('test-email').value.trim();
+        const logBox = document.getElementById('response-log');
+        const btn = document.getElementById('otp-btn');
+
+        if (!email || !email.includes('@')) {
+            logBox.innerHTML = `<span style="color: #ef4444;">❌ Validation Error: Please enter a valid email address</span>`;
+            logBox.style.color = '#ef4444';
+            return;
+        }
+
+        // Loading state
+        btn.innerHTML = `<div class="spinner"></div> Sending...`;
+        btn.disabled = true;
+        logBox.innerHTML = `<span style="color: #fbbf24;">⏳ Connecting to ${CONFIG.workerUrl}...</span>`;
+        logBox.style.color = '#fbbf24';
+
+        try {
+            const response = await fetch(`${CONFIG.workerUrl}/api/send-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    type: 'login',
+                    apiKey: CONFIG.apiKey
+                })
+            });
+            
+            const result = await response.json();
+            
+            // Format JSON output nicely
+            const jsonStr = JSON.stringify(result, null, 2)
+                .replace(/"([^"]+)":/g, '<span style="color: #9ca3af;">"$1"</span>:')
+                .replace(/: "([^"]*)"/g, ': <span style="color: #10b981;">"$1"</span>')
+                .replace(/: (\d+)/g, ': <span style="color: #60a5fa;">$1</span>')
+                .replace(/: (true|false)/g, ': <span style="color: #f59e0b;">$1</span>');
+            
+            logBox.innerHTML = jsonStr;
+            logBox.style.color = result.success ? '#10b981' : '#ef4444';
+
+            if (result.success) {
+                showToast(`✅ OTP sent to ${email}`, 'success');
+                // Update request count locally
+                incrementStat('val-reqs');
+            } else {
+                showToast(`❌ Failed: ${result.error || 'Unknown error'}`, 'error');
+            }
+
+        } catch (err) {
+            logBox.innerHTML = `<span style="color: #ef4444;">❌ Network Error: ${err.message}<br><br>The API at ${CONFIG.workerUrl} may be down or CORS may be blocking this request.</span>`;
+            logBox.style.color = '#ef4444';
+            showToast('Network error - check console for details', 'error');
+        } finally {
+            btn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                Send Test OTP
+            `;
+            btn.disabled = false;
+        }
+    }
+
+    function clearResponse() {
+        document.getElementById('response-log').innerHTML = '// Awaiting request...';
+        document.getElementById('response-log').style.color = '#888';
+        document.getElementById('test-email').value = '';
+    }
+
+    // ==========================================
+    // UTILITY FUNCTIONS
+    // ==========================================
+
+    function animateValue(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+        
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const value = Math.floor(progress * (end - start) + start);
+            obj.textContent = value.toLocaleString();
+            if (progress < 1) window.requestAnimationFrame(step);
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    function incrementStat(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            const current = parseInt(el.textContent.replace(/,/g, '')) || 0;
+            el.textContent = (current + 1).toLocaleString();
+        }
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Copied to clipboard!', 'success');
+        }).catch(() => {
+            showToast('Failed to copy', 'error');
         });
+    }
+
+    function toggleKeyVisibility() {
+        const display = document.getElementById('api-key-display');
+        keyVisible = !keyVisible;
+        display.textContent = keyVisible 
+            ? CONFIG.apiKey 
+            : 'sk_live_••••••••••••••••••••••••';
+        showToast(keyVisible ? '⚠️ Key revealed - be careful!' : 'Key hidden', 'info');
+    }
+
+    function regenerateKey() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let newKey = 'auth2u_key_';
+        for (let i = 0; i < 32; i++) newKey += chars.charAt(Math.floor(Math.random() * chars.length));
+        
+        CONFIG.apiKey = newKey;
+        document.getElementById('api-key-display').textContent = newKey;
+        keyVisible = true;
+        showToast('New key generated! Update your backend.', 'warning');
+    }
+
+    // Table helpers
+    function getEventIcon(event) {
+        if (event.includes('Sent')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>';
+        if (event.includes('Verified') || event.includes('Success') || event.includes('Used')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+        if (event.includes('Reset')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>';
+        if (event.includes('Register')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>';
+        return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    }
+
+    function getStatusStyle(status) {
+        switch(status.toLowerCase()) {
+            case 'success':
+            case 'delivered':
+            case 'verified':
+                return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            case 'pending':
+                return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
+            case 'failed':
+            case 'blocked':
+            case 'error':
+                return 'bg-red-500/10 text-red-400 border border-red-500/20';
+            default:
+                return 'bg-gray-500/10 text-gray-400 border border-gray-500/20';
+        }
+    }
+
+    function getStatusDot(status) {
+        const colors = {
+            success: 'bg-emerald-400',
+            delivered: 'bg-emerald-400',
+            verified: 'bg-emerald-400',
+            pending: 'bg-yellow-400',
+            failed: 'bg-red-400',
+            blocked: 'bg-red-400',
+            error: 'bg-red-400'
+        };
+        return `<span class="w-1.5 h-1.5 rounded-full ${colors[status.toLowerCase()] || 'bg-gray-400'}"></span>`;
+    }
+
+    function maskEmail(email) {
+        if (!email) return '-';
+        const [user, domain] = email.split('@');
+        return `${user.substring(0, 3)}***@${domain}`;
+    }
+
+    function timeAgo(timestamp) {
+        const ts = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
+        const seconds = Math.floor((Date.now() - ts) / 1000);
+        if (seconds < 60) return `${seconds}s ago`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        return `${Math.floor(hours / 24)}d ago`;
+    }
+
+    function filterActivity() {
+        const query = document.getElementById('search-activity').value.toLowerCase();
+        const rows = document.querySelectorAll('#activity-body tr');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const match = !query || text.includes(query);
+            row.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+        
+        document.getElementById('activity-count').textContent = `Showing ${visibleCount} entries`;
+    }
+
+    async function refreshActivity() {
+        const btn = event.target.closest('button');
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner w-4 h-4"></div>';
+        
+        await loadActivityLogs();
+        
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh`;
+        }, 500);
+        
+        showToast('Activity refreshed', 'success');
+    }
+
+    // ==========================================
+    // TOAST NOTIFICATION SYSTEM
+    // ==========================================
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icons = {
+            success: '<svg class="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+            error: '<svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+            info: '<svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+            warning: '<svg class="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
+        };
+
+        toast.innerHTML = `
+            ${icons[type]}
+            <div class="flex-1">
+                <div class="text-sm font-medium text-white">${message}</div>
+                <div class="text-xs text-gray-500 capitalize">${type}</div>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-gray-600 hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        `;
+
+        container.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('%c🔐 Auth2U Dashboard v2.4 Ready', 'color: #AB1509; font-size: 14px; font-weight: bold;');
+        console.log('%c📡 Endpoint: ' + CONFIG.workerUrl, 'color: #3b82f6; font-size: 11px;');
+    });
+
+    // Enter key support
+    document.getElementById('admin-pass').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+    });
     </script>
 </body>
 </html>

@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auth2U — Enterprise Auth Provider</title>
+    <title>Auth2U Dashboard — Admin Panel</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,401 +16,1311 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        brand: { 50:'#fff1f2', 100:'#ffe4e6', 500:'#F43F5E', 600:'#E11D48', 900:'#881337' },
-                        dark: { 50:'#f8fafc', 800:'#1e293b', 900:'#0f172a', 950:'#020617' }
-                    }
+                        'crimson-brand': '#AB1509',
+                        'crimson-dark': '#8A1107',
+                        'charcoal-deep': '#B0B0A8',
+                        'cream-bg': '#000000',
+                        'light-neutral': '#0A0A0A',
+                        'border-warm': '#2A2A2A',
+                        'card-dark': '#111111',
+                        'surface-dark': '#1A1A1A',
+                    },
+                    fontFamily: {
+                        'dm-sans': ['DM Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+                        'space-mono': ['Space Mono', 'Courier New', 'monospace'],
+                    },
                 }
             }
         }
     </script>
+    
     <style>
-        body { background-color: #020617; color: #e2e8f0; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
-        .input-dark { background: #0f172a; border: 1px solid #334155; color: white; transition: 0.2s; }
-        .input-dark:focus { border-color: #F43F5E; outline: none; box-shadow: 0 0 0 3px rgba(244,63,94,0.2); }
-        .btn-primary { background: #F43F5E; color: white; font-weight: 600; padding: 10px 20px; border-radius: 8px; transition: 0.2s; }
-        .btn-primary:hover { background: #E11D48; transform: translateY(-1px); }
-        .btn-secondary { background: transparent; border: 1px solid #334155; color: #cbd5e1; font-weight: 500; padding: 10px 20px; border-radius: 8px; transition: 0.2s; }
-        .btn-secondary:hover { background: #1e293b; border-color: #64748b; }
+        * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #000000;
+            color: #FFFFFF;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: 
+                radial-gradient(at 20% 30%, rgba(171, 21, 9, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 70%, rgba(171, 21, 9, 0.08) 0px, transparent 50%),
+                radial-gradient(at 40% 80%, rgba(59, 130, 246, 0.05) 0px, transparent 40%),
+                linear-gradient(to bottom, #000000, #0a0a0a);
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(17, 17, 17, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(42, 42, 42, 0.5);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #AB1509; }
+
+        /* Input Styles */
+        .input-field {
+            background-color: rgba(26, 26, 26, 0.8);
+            border: 2px solid #222;
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            width: 100%;
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #AB1509;
+            background-color: rgba(10, 10, 10, 0.9);
+            box-shadow: 0 0 0 4px rgba(171, 21, 9, 0.15), 0 0 20px rgba(171, 21, 9, 0.1);
+        }
+        
+        .input-field::placeholder { color: #555; }
+
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #AB1509 0%, #D42014 100%);
+            color: #fff;
+            font-weight: 700;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(171, 21, 9, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(171, 21, 9, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.03);
+            color: #ccc;
+            font-weight: 600;
+            padding: 12px 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: rgba(220, 38, 38, 0.2);
+            color: #fca5a5;
+            font-weight: 600;
+            padding: 8px 16px;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 10px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-danger:hover {
+            background: rgba(220, 38, 38, 0.3);
+            border-color: rgba(220, 38, 38, 0.5);
+            color: #fff;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+            font-weight: 700;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(5, 150, 105, 0.3);
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(5, 150, 105, 0.4);
+        }
+
+        /* Card Styles */
+        .dashboard-card {
+            background: linear-gradient(145deg, rgba(17,17,17,0.9) 0%, rgba(10,10,10,0.95) 100%);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(171,21,9,0.5), transparent);
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(17,17,17,0.95) 0%, rgba(13,13,13,1) 100%);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-color, #AB1509), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        }
+        
+        .stat-card:hover::after { opacity: 1; }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #050505;
+            border: 1px solid #222;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .code-header {
+            background: rgba(20,20,20,0.8);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; opacity: 0.8; }
+        
+        .code-content {
+            padding: 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #888;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        /* Badge */
+        .badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, #FF6B5B 0%, #AB1509 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-slide-up { animation: slideUp 0.5s ease-out forwards; }
+        .shake { animation: shake 0.4s ease-in-out; }
+
+        /* Status Pulse */
+        .status-pulse {
+            position: relative;
+        }
+        .status-pulse::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: inherit;
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: rgba(17,17,17,0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px 20px;
+            min-width: 300px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-left: 3px solid #10b981; }
+        .toast.error { border-left: 3px solid #ef4444; }
+        .toast.info { border-left: 3px solid #3b82f6; }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .data-table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #666;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        
+        .data-table td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle;
+        }
+        
+        .data-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease-out;
+        }
+
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Demo Badge */
+        .demo-badge {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(171, 21, 9, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(171,21,9,0.3);
+        }
     </style>
 </head>
-<body class="min-h-screen font-sans">
+<body class="bg-black min-h-screen">
 
-    <!-- APP CONTAINER -->
-    <div id="app">
+    <!-- Background Effects -->
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- LOGIN VIEW -->
+    <div id="login-view" class="min-h-screen flex items-center justify-center p-6 relative z-10">
         
-        <!-- VIEW: AUTH SCREENS (Login/Register) -->
-        <div id="auth-view" class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-            <!-- Background Glow -->
-            <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-600 rounded-full blur-[120px] opacity-20"></div>
-            <div class="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-600 rounded-full blur-[120px] opacity-20"></div>
+        <!-- Floating Orbs -->
+        <div class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-red-900/20 rounded-full blur-[100px] animate-float"></div>
+        <div class="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-gray-800/20 rounded-full blur-[80px]" style="animation: float 8s ease-in-out infinite reverse;"></div>
 
-            <div class="glass p-8 rounded-2xl w-full max-w-md shadow-2xl relative z-10">
-                
-                <!-- Logo Area -->
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-14 h-14 bg-brand-600 rounded-xl mb-4 shadow-lg shadow-brand-600/30">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                    </div>
-                    <h1 class="text-2xl font-bold text-white">Auth2U Console</h1>
-                    <p class="text-slate-400 text-sm mt-2">Enterprise Authentication Infrastructure</p>
-                </div>
-
-                <!-- TOGGLE: LOGIN vs REGISTER -->
-                <div class="flex mb-6 bg-dark-900 rounded-lg p-1 relative">
-                    <button id="tab-login" onclick="switchTab('login')" class="flex-1 py-2 text-sm font-medium rounded-md transition-all text-white bg-brand-600">Login</button>
-                    <button id="tab-register" onclick="switchTab('register')" class="flex-1 py-2 text-sm font-medium rounded-md transition-all text-slate-400 hover:text-white">Register</button>
-                </div>
-
-                <!-- FORM: LOGIN -->
-                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
-                        <input type="email" id="l-email" class="input-dark w-full px-4 py-3 rounded-lg" placeholder="admin@company.com" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Password</label>
-                        <input type="password" id="l-pass" class="input-dark w-full px-4 py-3 rounded-lg" placeholder="••••••••" required>
-                    </div>
-                    <button type="submit" class="btn-primary w-full py-3 mt-2">Access Dashboard</button>
-                    <p id="l-error" class="text-red-400 text-xs text-center mt-2 hidden"></p>
-                </form>
-
-                <!-- FORM: REGISTER -->
-                <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden">
-                    <div class="grid grid-cols-2 gap-4">
-                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Company Name</label>
-                            <input type="text" id="r-company" class="input-dark w-full px-4 py-3 rounded-lg" placeholder="Acme Inc" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Email</label>
-                            <input type="email" id="r-email" class="input-dark w-full px-4 py-3 rounded-lg" placeholder="you@acme.com" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Password</label>
-                        <input type="password" id="r-pass" class="input-dark w-full px-4 py-3 rounded-lg" placeholder="Min 8 characters" required>
-                    </div>
-                    
-                    <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mt-2">
-                        <p class="text-yellow-200 text-xs"><strong>Note:</strong> Public registration is restricted. If you cannot create an account, please contact support.</p>
-                    </div>
-
-                    <button type="submit" class="btn-primary w-full py-3 mt-2">Create Account</button>
-                    <p id="r-error" class="text-red-400 text-xs text-center mt-2 hidden"></p>
-                </form>
-
-            </div>
-        </div>
-
-        <!-- VIEW: DASHBOARD MAIN -->
-        <div id="dashboard-view" style="display:none;" class="min-h-screen">
+        <div class="w-full max-w-md relative z-10">
             
-            <!-- NAVBAR -->
-            <nav class="glass sticky top-0 z-50 px-6 py-4 border-b border-white/5">
-                <div class="max-w-7xl mx-auto flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">A2U</div>
-                        <span class="font-bold text-white tracking-wide">Dashboard</span>
-                        <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full border border-green-500/30">Live</span>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span id="nav-user" class="text-sm text-slate-400 hidden md:block">admin@company.com</span>
-                        <button onclick="logout()" class="text-slate-400 hover:text-red-400 text-sm font-medium transition-colors">Logout</button>
-                    </div>
+            <!-- Logo -->
+            <div class="text-center mb-10 animate-slide-up">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-crimson-brand to-crimson-dark border border-white/10 rounded-2xl mb-6 shadow-lg mx-auto relative">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-black"></div>
                 </div>
-            </nav>
+                <h1 class="font-dm-sans font-black text-4xl text-white mb-3 tracking-tight">Auth2U</h1>
+                <p class="font-dm-sans text-gray-500 text-lg">Enterprise Authentication Dashboard</p>
+            </div>
 
-            <!-- CONTENT -->
-            <main class="max-w-7xl mx-auto p-6 space-y-8">
+            <!-- Login Card -->
+            <div id="login-card" class="dashboard-card animate-slide-up" style="animation-delay: 0.1s;">
                 
-                <!-- HEADER -->
-                <div class="pt-4 pb-2">
-                    <h2 class="text-3xl font-bold text-white">Welcome back, <span id="dash-name">Admin</span></h2>
-                    <p class="text-slate-400 mt-1">Manage your authentication infrastructure and email templates.</p>
-                </div>
-
-                <!-- GRID STATS -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="glass p-6 rounded-xl border-l-4 border-brand-500">
-                        <p class="text-slate-400 text-sm font-medium">Active Users</p>
-                        <p class="text-3xl font-bold text-white mt-1">--</p> <!-- Placeholder for real data later -->
-                    </div>
-                    <div class="glass p-6 rounded-xl border-l-4 border-blue-500">
-                        <p class="text-slate-400 text-sm font-medium">API Requests (Today)</p>
-                        <p class="text-3xl font-bold text-white mt-1" id="stat-reqs">0</p>
-                    </div>
-                    <div class="glass p-6 rounded-xl border-l-4 border-emerald-500">
-                        <p class="text-slate-400 text-sm font-medium">Deliverability</p>
-                        <p class="text-3xl font-bold text-emerald-400 mt-1">99.9%</p>
+                <!-- Demo Credentials Hint -->
+                <div class="mb-6 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
+                    <svg class="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="text-xs text-blue-300/80">
+                        <strong>Demo Account:</strong> Click the button below or use<br>
+                        <code class="text-blue-300 bg-black/30 px-1.5 py-0.5 rounded mt-1 inline-block">admin@auth2u.com</code> / 
+                        <code class="text-blue-300 bg-black/30 px-1.5 py-0.5 rounded">admin123</code>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <form onsubmit="event.preventDefault(); handleLogin();" class="space-y-5">
                     
-                    <!-- LEFT: API KEYS & TEST -->
-                    <div class="glass p-6 rounded-xl space-y-6">
-                        <h3 class="text-lg font-bold text-white border-b border-white/10 pb-3">Developer Tools</h3>
-                        
-                        <!-- API KEY DISPLAY -->
-                        <div>
-                            <label class="text-xs font-bold text-slate-400 uppercase">Your Secret Key</label>
-                            <div class="flex mt-1">
-                                <input type="text" id="api-key-display" readonly value="Generating..." class="input-dark flex-1 rounded-r-none text-sm font-mono">
-                                <button onclick="copyKey()" class="bg-dark-800 border border-l-0 border-gray-600 text-slate-300 px-3 rounded-r-lg hover:bg-dark-700">Copy</button>
-                            </div>
-                            <p class="text-xs text-slate-500 mt-1">Use this key in your API headers to authenticate requests.</p>
-                        </div>
-
-                        <!-- TEST SECTION -->
-                        <div class="bg-dark-950 p-4 rounded-lg border border-white/5">
-                            <div class="flex justify-between items-center mb-3">
-                                <span class="text-sm font-bold text-white">Test OTP Endpoint</span>
-                                <span class="text-xs text-brand-400 font-mono">POST /api/send-otp</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <input type="email" id="test-email" placeholder="Enter test email..." class="input-dark flex-1 text-sm py-2">
-                                <button onclick="sendTestOTP()" class="btn-primary text-sm py-2">Send Test</button>
-                            </div>
-                            <pre id="response-log" class="mt-3 text-xs text-green-400 bg-black/30 p-2 rounded hidden overflow-auto max-h-32">// Response...</pre>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2 ml-1">Email Address</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                            </span>
+                            <input type="email" id="admin-email" class="input-field pl-12" placeholder="Enter your email" required autocomplete="email">
                         </div>
                     </div>
 
-                    <!-- RIGHT: SETTINGS / TEMPLATES -->
-                    <div class="glass p-6 rounded-xl space-y-6">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-bold text-white border-b border-white/10 pb-3 w-full">Brand Settings</h3>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2 ml-1">Password</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            </span>
+                            <input type="password" id="admin-pass" class="input-field pl-12" placeholder="Enter your password" required autocomplete="current-password">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm pt-2">
+                        <label class="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-white transition-colors group">
+                            <input type="checkbox" class="w-4 h-4 rounded border-gray-600 bg-transparent text-crimson-brand focus:ring-crimson-brand focus:ring-offset-0 cursor-pointer">
+                            <span class="group-hover:text-white transition-colors">Remember device</span>
+                        </label>
+                        <a href="#" class="text-crimson-brand hover:text-crimson-dark transition-colors font-medium">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" id="login-btn" class="btn-primary w-full py-4 text-base mt-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                        </svg>
+                        Sign In to Dashboard
+                    </button>
+
+                    <button type="button" onclick="fillDemoCredentials()" class="w-full py-3 text-sm text-gray-500 hover:text-white border border-dashed border-gray-800 hover:border-gray-600 rounded-xl transition-all">
+                        Fill Demo Credentials
+                    </button>
+                </form>
+            </div>
+
+            <p class="text-center mt-8 text-xs text-gray-700 animate-slide-up" style="animation-delay: 0.2s;">
+                © 2026 Auth2U Sdn Bhd • Kuala Lumpur, Malaysia<br>
+                <span class="inline-flex items-center gap-1 mt-1">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full status-pulse"></span>
+                    End-to-end encrypted connection
+                </span>
+            </p>
+        </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboard-view" style="display:none;" class="min-h-screen relative z-10">
+        
+        <!-- Top Navigation -->
+        <nav class="glass-panel fixed top-0 left-0 right-0 z-50 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-crimson-brand to-crimson-dark rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </div>
+                        <div class="hidden sm:block">
+                            <div class="font-extrabold text-white text-lg leading-none">Dashboard</div>
+                            <div class="text-xs text-gray-500">Admin Panel v2.4</div>
+                        </div>
+                    </div>
+
+                    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full ml-4">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span class="text-xs font-medium text-emerald-400">All Systems Operational</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button class="relative w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/5 hover:border-white/10 group">
+                        <svg class="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-crimson-brand rounded-full border-2 border-black"></span>
+                    </button>
+
+                    <div class="hidden sm:flex items-center gap-3 pl-3 pr-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-xs font-bold">AD</div>
+                        <div class="text-left">
+                            <div class="text-sm font-semibold text-white">Admin User</div>
+                            <div class="text-xs text-gray-500">Super Admin</div>
+                        </div>
+                    </div>
+
+                    <button onclick="logout()" class="btn-danger text-sm hidden sm:flex">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="pt-28 pb-12 px-6">
+            <div class="max-w-7xl mx-auto space-y-8">
+                
+                <!-- Header -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 animate-slide-up">
+                    <div>
+                        <h1 class="font-dm-sans font-black text-3xl md:text-4xl text-white mb-2 tracking-tight">
+                            Welcome back, <span class="gradient-text">Admin</span>
+                        </h1>
+                        <p class="text-gray-500 text-lg">Here's what's happening with your authentication infrastructure today.</p>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-gray-500">
+                        <span class="px-3 py-1.5 bg-white/5 rounded-lg border border-white/5 font-mono" id="current-time"></span>
+                        <span>Last sync: Just now</span>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    
+                    <!-- Total Users -->
+                    <div class="stat-card animate-slide-up" style="--accent-color: #AB1509; animation-delay: 0.1s;">
+                        <div class="flex items-start justify-between">
+                            <div class="stat-icon bg-gradient-to-br from-red-500/20 to-red-900/20 border border-red-500/20">
+                                <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            </div>
+                            <span class="badge bg-red-500/10 text-red-400 border border-red-500/20">Live</span>
+                        </div>
+                        <div class="font-dm-sans font-black text-4xl text-white mb-1 tabular-nums" id="val-users">--</div>
+                        <div class="text-sm text-gray-500 mb-3">Total Users</div>
+                        <div class="flex items-center gap-2 text-xs text-emerald-400 font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            +12.5% from last month
+                        </div>
+                        <div class="mt-3 progress-bar">
+                            <div class="progress-fill bg-gradient-to-r from-red-500 to-orange-500" style="width: 78%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- API Requests -->
+                    <div class="stat-card animate-slide-up" style="--accent-color: #3B82F6; animation-delay: 0.15s;">
+                        <div class="flex items-start justify-between">
+                            <div class="stat-icon bg-gradient-to-br from-blue-500/20 to-blue-900/20 border border-blue-500/20">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            </div>
+                            <span class="badge bg-blue-500/10 text-blue-400 border border-blue-500/20">Today</span>
+                        </div>
+                        <div class="font-dm-sans font-black text-4xl text-white mb-1 tabular-nums" id="val-reqs">--</div>
+                        <div class="text-sm text-gray-500 mb-3">API Requests</div>
+                        <div class="flex items-center gap-2 text-xs text-blue-400 font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Avg: 142ms response
+                        </div>
+                        <div class="mt-3 progress-bar">
+                            <div class="progress-fill bg-gradient-to-r from-blue-500 to-cyan-500" style="width: 45%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Success Rate -->
+                    <div class="stat-card animate-slide-up" style="--accent-color: #10B981; animation-delay: 0.2s;">
+                        <div class="flex items-start justify-between">
+                            <div class="stat-icon bg-gradient-to-br from-emerald-500/20 to-emerald-900/20 border border-emerald-500/20">
+                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                        </div>
+                        <div class="font-dm-sans font-black text-4xl text-emerald-400 mb-1">99.98%</div>
+                        <div class="text-sm text-gray-500 mb-3">Success Rate</div>
+                        <div class="flex items-center gap-2 text-xs text-emerald-400 font-medium">
+                            <span class="w-2 h-2 bg-emerald-400 rounded-full status-pulse"></span>
+                            All systems healthy
+                        </div>
+                        <div class="mt-3 progress-bar">
+                            <div class="progress-fill bg-gradient-to-r from-emerald-500 to-green-400" style="width: 99.98%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Active Sessions -->
+                    <div class="stat-card animate-slide-up" style="--accent-color: #A855F7; animation-delay: 0.25s;">
+                        <div class="flex items-start justify-between">
+                            <div class="stat-icon bg-gradient-to-br from-purple-500/20 to-purple-900/20 border border-purple-500/20">
+                                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+                            </div>
+                            <span class="w-2.5 h-2.5 bg-emerald-400 rounded-full status-pulse"></span>
+                        </div>
+                        <div class="font-dm-sans font-black text-4xl text-purple-400 mb-1 tabular-nums" id="val-sessions">--</div>
+                        <div class="text-sm text-gray-500 mb-3">Active Sessions</div>
+                        <div class="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                            Peak: 892 today
+                        </div>
+                        <div class="mt-3 progress-bar">
+                            <div class="progress-fill bg-gradient-to-r from-purple-500 to-pink-500" style="width: 62%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- API Test Section -->
+                    <div class="dashboard-card animate-slide-up" style="animation-delay: 0.3s;">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-xl text-white">API Tester</h3>
+                                <p class="text-sm text-gray-500">Send test OTP to verify connectivity</p>
+                            </div>
                         </div>
 
                         <div class="space-y-4">
                             <div>
-                                <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Sender Domain / Email</label>
-                                <input type="email" id="set-sender" class="input-dark w-full text-sm" placeholder="noreply@yourdomain.com" value="onboarding@resend.dev">
-                                <p class="text-xs text-slate-500 mt-1">Must be verified in Resend dashboard first.</p>
+                                <label class="block text-sm font-medium text-gray-400 mb-2 ml-1">Target Email</label>
+                                <input type="email" id="test-email" class="input-field" placeholder="test@example.com">
                             </div>
+                            
+                            <button onclick="sendTestOTP()" id="otp-btn" class="btn-success w-full">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                Send Test OTP
+                            </button>
+                        </div>
 
-                            <div>
-                                <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Company Name (Signature)</label>
-                                <input type="text" id="set-company" class="input-dark w-full text-sm" placeholder="My Company Name" value="Luviio Auth">
+                        <!-- Response Log -->
+                        <div class="mt-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm font-semibold text-gray-400">Response Output</span>
+                                <span class="text-xs text-gray-600 font-mono bg-white/5 px-2 py-1 rounded">JSON</span>
                             </div>
-
-                            <div>
-                                <label class="text-xs font-bold text-slate-400 uppercase block mb-1">OTP Email Template</label>
-                                <textarea id="set-otp-tpl" class="input-dark w-full h-32 text-xs p-3 font-mono leading-relaxed">Hi there,
-
-Use the verification code below to sign in.
-
-# {CODE}
-
-This code will expire in 10 minutes.
-
-If you didn’t request this code, you can safely ignore this email.
-
-— {COMPANY_NAME} Auth</textarea>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <div class="code-dot bg-[#ff5f57]"></div>
+                                    <div class="code-dot bg-[#febc2e]"></div>
+                                    <div class="code-dot bg-[#28c840]"></div>
+                                    <span class="ml-3 text-xs text-gray-600 font-mono">response.json</span>
+                                    <button onclick="clearResponse()" class="ml-auto text-xs text-gray-600 hover:text-white transition-colors">Clear</button>
+                                </div>
+                                <pre id="response-log" class="code-content">// Awaiting request...</pre>
                             </div>
-
-                             <div>
-                                <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Magic Link Template</label>
-                                <textarea id="set-link-tpl" class="input-dark w-full h-32 text-xs p-3 font-mono leading-relaxed">Hi there,
-
-We received a request to sign in to your account.
-
-Use the secure magic link below:
-
-[ Open Secure Session ]
-
-This link is single-use and expires in 10 minutes.
-
-If you did not request this email, you can ignore it safely.
-
-— {COMPANY_NAME}</textarea>
-                            </div>
-
-                            <button onclick="saveSettings()" class="btn-secondary w-full">Save Configuration</button>
-                            <p id="settings-msg" class="text-xs text-green-400 text-center hidden">Settings Saved!</p>
                         </div>
                     </div>
 
+                    <!-- Configuration Panel -->
+                    <div class="dashboard-card animate-slide-up" style="animation-delay: 0.35s;">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 bg-crimson-brand/10 border border-crimson-brand/20 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-crimson-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.329c1.362 0 2.215 0 2.63.095.461.106.897.304 1.256.663.359.359.557.795.663 1.256.095.415.095 1.268.095 2.63 0 1.362 0 2.215-.095 2.63-.106.461-.304.897-.663 1.256-.359.359-.795.557-1.256.663-.415.095-1.268.095-2.63.095-1.362 0-2.215 0-2.63-.095-.461-.106-.897-.304-1.256-.663-.359-.359-.557-.795-.663-1.256C4.095 13.215 4.095 12.362 4.095 11c0-1.362 0-2.215.095-2.63.106-.461.304-.897.663-1.256.359-.359.795-.557 1.256-.663.415-.095 1.268-.095 2.63-.095zM12 16a4 4 0 100-8 4 4 0 000 8z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-xl text-white">Configuration</h3>
+                                <p class="text-sm text-gray-500">Endpoint & keys management</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-5">
+                            
+                            <!-- Endpoint URL -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">API Endpoint</label>
+                                <div class="flex items-center gap-2 p-3 bg-black/50 border border-white/5 rounded-xl font-mono text-sm text-emerald-400 break-all group hover:border-emerald-500/30 transition-colors cursor-pointer" onclick="copyToClipboard('https://workers.luviio.com/api/send-otp')">
+                                    <svg class="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span class="flex-1">https://workers.luviio.com/api/send-otp</span>
+                                    <svg class="w-4 h-4 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                </div>
+                            </div>
+
+                            <!-- API Key -->
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-medium text-gray-400">Secret Key</label>
+                                    <button onclick="regenerateKey()" class="text-xs bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white px-3 py-1.5 rounded-lg border border-white/5 transition-all font-mono">
+                                        Regenerate
+                                    </button>
+                                </div>
+                                <div class="p-3 bg-black/50 border border-white/5 rounded-xl font-mono text-sm text-orange-400 break-all flex items-center gap-2">
+                                    <span class="flex-1" id="api-key-display">sk_live_••••••••••••••••••••••••</span>
+                                    <button onclick="toggleKeyVisibility()" class="text-gray-600 hover:text-white transition-colors" id="toggle-key-btn">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    </button>
+                                </div>
+                                <p class="mt-2 text-xs text-gray-600 flex items-center gap-2">
+                                    <svg class="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.85 3.963-1.125.96.58 1.596 1.61 1.722 2.692.104.91.07 1.886-.148 2.79-.392 1.172-.95 2.23-1.67 3.108-.76.94-1.77 1.49-2.89 1.564-.45.03-.92.007-1.37-.094-.443-.1-.87-.278-1.245-.53-.404-.27-.74-.62-1.001-1.006-.264-.39-.43-.84-.49-1.31-.058-.47-.04-.95.04-1.41.09-.46.26-.9.51-1.29.25-.38.57-.72.94-.99.37-.27.78-.48 1.22-.64.44-.16.9-.26 1.37-.31.47-.05.95-.04 1.41.04.46.09.9.26 1.29.51.38.25.72.57.99.94.27.37.48.78.64 1.22.16.44.26.9.31 1.37.05.47.04.95-.04 1.41-.09.46-.26.9-.51 1.29-.25.38-.57.72-.94.99-.37.27-.78.48-1.22.64-.44.16-.9.26-1.37.31-.47.05-.95.04-1.41-.04-.46-.09-.9-.26-1.29-.51-.38-.25-.72-.57-.99-.94-.27-.37-.48-.78-.64-1.22-.16-.44-.26-.9-.31-1.37z" clip-rule="evenodd"></path></svg>
+                                    Never expose in client-side code or public repositories.
+                                </p>
+                            </div>
+
+                            <!-- Rate Limit -->
+                            <div class="p-4 bg-white/[0.02] rounded-xl border border-white/5">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-sm font-medium text-gray-300">Rate Limit Usage</span>
+                                    <span class="text-xs text-emerald-400 font-mono bg-emerald-500/10 px-2 py-1 rounded">Healthy</span>
+                                </div>
+                                <div class="text-2xl font-bold text-white mb-2">124 <span class="text-sm font-normal text-gray-500">/ 1,000</span></div>
+                                <div class="progress-bar h-2">
+                                    <div class="progress-fill bg-gradient-to-r from-emerald-500 via-yellow-500 to-red-500" style="width: 12.4%;" id="rate-limit-bar"></div>
+                                </div>
+                                <p class="text-xs text-gray-600 mt-2">Resets in 47 seconds</p>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="pt-4 border-t border-white/5 space-y-3">
+                                <button class="btn-secondary w-full text-sm justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    View Full Documentation
+                                </button>
+                                <button class="btn-secondary w-full text-sm justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    Analytics Dashboard
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </main>
-        </div>
+
+                <!-- Recent Activity Table -->
+                <div class="dashboard-card animate-slide-up" style="animation-delay: 0.4s;">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h3 class="font-bold text-xl text-white">Recent Activity</h3>
+                            <p class="text-sm text-gray-500">Live authentication events</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <input type="text" id="search-activity" placeholder="Search events..." class="input-field !py-2 !px-4 !text-sm !rounded-lg !pl-10 !w-64" onkeyup="filterActivity()">
+                                <svg class="w-4 h-4 text-gray-600 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <button onclick="refreshActivity()" class="btn-secondary !py-2 !px-4 !text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto rounded-xl border border-white/5">
+                        <table class="data-table" id="activity-table">
+                            <thead>
+                                <tr>
+                                    <th>Event Type</th>
+                                    <th>User / Email</th>
+                                    <th>Status</th>
+                                    <th>IP Address</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activity-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+                        <span id="activity-count">Showing 0 entries</span>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-30" disabled>Previous</button>
+                            <button class="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg transition-colors">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
     </div>
 
-    <!-- LOGIC -->
+    <!-- Demo Badge (visible only when logged in) -->
+    <div id="demo-badge" class="demo-badge" style="display: none;">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span><strong>DEMO MODE</strong> — Using mock data</span>
+    </div>
+
     <script>
-        // CONFIG
-        const API_URL = 'https://workers.luviio.com'; // NO TRAILING SLASH!
+        // ==========================================
+        // CONFIGURATION & CONSTANTS
+        // ==========================================
+        const CONFIG = {
+            // Firebase will be integrated here later
+            firebase: {
+                enabled: false,
+                // apiKey: "YOUR_API_KEY",
+                // authDomain: "your-project.firebaseapp.com",
+                // projectId: "your-project-id"
+            },
+            // Demo credentials (for development only)
+            demoAccount: {
+                email: 'admin@auth2u.com',
+                password: 'admin123',
+                name: 'Admin User',
+                role: 'super_admin'
+            },
+            workerUrl: 'https://workers.luviio.com'
+        };
 
-        let currentUser = null;
-
-        // --- UI SWITCHING ---
-        function switchTab(tab) {
-            const loginForm = document.getElementById('form-login');
-            const regForm = document.getElementById('form-register');
-            const tabLogin = document.getElementById('tab-login');
-            const tabReg = document.getElementById('tab-register');
-
-            if(tab === 'login') {
-                loginForm.classList.remove('hidden'); regForm.classList.add('hidden');
-                tabLogin.classList.replace('text-slate-400','text-white'); tabLogin.classList.add('bg-brand-600');
-                tabReg.classList.replace('text-white','text-slate-400'); tabReg.classList.remove('bg-brand-600');
-            } else {
-                regForm.classList.remove('hidden'); loginForm.classList.add('hidden');
-                tabReg.classList.replace('text-slate-400','text-white'); tabReg.classList.add('bg-brand-600');
-                tabLogin.classList.replace('text-white','text-slate-400'); tabLogin.classList.remove('bg-brand-600');
-            }
-        }
-
-        // --- AUTH HANDLERS ---
-        async function handleLogin(e) {
-            e.preventDefault();
-            const errBox = document.getElementById('l-error');
-            errBox.classList.add('hidden');
-
-            const btn = e.target.querySelector('button');
-            btn.innerText = "Authenticating...";
-            btn.disabled = true;
-
-            try {
-                // EXPLICIT FULL URL
-                const res = await fetch(`${API_URL}/api/admin/login`, { 
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        email: document.getElementById('l-email').value,
-                        password: document.getElementById('l-pass').value
-                    })
-                });
-                
-                // DEBUG: Log URL to console to be sure
-                console.log("Fetching from:", `${API_URL}/api/admin/login`);
-
-                const data = await res.json();
-
-                if(data.success) {
-                    currentUser = data.user;
-                    initDashboard();
-                } else {
-                    errBox.innerText = data.error || "Login failed";
-                    errBox.classList.remove('hidden');
-                }
-            } catch(err) {
-                console.error(err);
-                errBox.innerText = "Network error: " + err.message;
-                errBox.classList.remove('hidden');
-            } finally {
-                btn.innerText = "Access Dashboard";
-                btn.disabled = false;
-            }
-        }
-
-        async function handleRegister(e) {
-            e.preventDefault();
-            const errBox = document.getElementById('r-error');
-            errBox.classList.add('hidden');
-
-            const btn = e.target.querySelector('button');
-            btn.innerText = "Creating Account...";
-            btn.disabled = true;
-
-            try {
-                // EXPLICIT FULL URL
-                const res = await fetch(`${API_URL}/api/admin/register`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        email: document.getElementById('r-email').value,
-                        password: document.getElementById('r-pass').value,
-                        companyName: document.getElementById('r-company').value
-                    })
-                });
-                const data = await res.json();
-                
-                if(data.success) {
-                    alert("Account created! Please login.");
-                    switchTab('login');
-                    document.getElementById('l-email').value = document.getElementById('r-email').value;
-                } else {
-                    errBox.innerText = data.error || "Registration failed";
-                    errBox.classList.remove('hidden');
-                }
-            } catch(err) {
-                 errBox.innerText = "Network error";
-                 errBox.classList.remove('hidden');
-            } finally {
-                btn.innerText = "Create Account";
-                btn.disabled = false;
-            }
-        }
-
-        // --- DASHBOARD FUNCTIONS ---
-        function initDashboard() {
-            document.getElementById('auth-view').style.display = 'none';
-            document.getElementById('dashboard-view').style.display = 'block';
+        // ==========================================
+        // MOCK DATA LAYER (Replace with Firebase calls)
+        // ==========================================
+        const mockDatabase = {
+            stats: {
+                totalUsers: 12847,
+                apiRequestsToday: 45892,
+                activeSessions: 543,
+                successRate: 99.98,
+                growthRate: 12.5
+            },
             
-            document.getElementById('dash-name').innerText = currentUser.companyName || "Admin";
-            document.getElementById('nav-user').innerText = currentUser.email;
-            document.getElementById('api-key-display').value = currentUser.apiKey;
-            document.getElementById('set-company').value = currentUser.companyName || "";
+            recentActivity: [
+                { id: 1, event: 'OTP Sent', email: 'sarah.chen@techcorp.io', status: 'delivered', ip: '203.45.67.89', timestamp: Date.now() - 120000, location: 'Singapore' },
+                { id: 2, event: 'Login Verified', email: 'marcus.williams@startup.co', status: 'success', ip: '192.168.1.105', timestamp: Date.now() - 300000, location: 'Kuala Lumpur' },
+                { id: 3, event: 'Password Reset', email: 'yuki.tanaka@design.studio', status: 'pending', ip: '103.22.33.44', timestamp: Date.now() - 480000, location: 'Tokyo' },
+                { id: 4, event: 'New Registration', email: 'alex.kumar@enterprise.my', status: 'success', ip: '175.156.78.90', timestamp: Date.now() - 720000, location: 'Penang' },
+                { id: 5, event: 'OTP Sent', email: 'emma.larsson@nordic.se', status: 'failed', ip: '85.12.34.56', timestamp: Date.now() - 900000, location: 'Stockholm' },
+                { id: 6, event: 'Login Attempt', email: 'john.smith@company.com', status: 'blocked', ip: '45.67.89.101', timestamp: Date.now() - 1200000, location: 'Unknown' },
+                { id: 7, event: 'Email Verified', email: 'priya.sharma@india.in', status: 'success', ip: '122.167.189.201', timestamp: Date.now() - 1500000, location: 'Mumbai' },
+                { id: 8, event: 'Session Renewed', email: 'david.brown@agency.uk', status: 'success', ip: '81.134.56.78', timestamp: Date.now() - 1800000, location: 'London' },
+                { id: 9, event: 'OTP Sent', email: 'maria.garcia@espana.es', status: 'delivered', ip: '88.99.112.133', timestamp: Date.now() - 2100000, location: 'Madrid' },
+                { id: 10, event: 'API Rate Limited', email: 'system@botnet.ru', status: 'error', ip: '185.220.101.0', timestamp: Date.now() - 2400000, location: 'Blocked' }
+            ],
+
+            getStats() {
+                return new Promise(resolve => {
+                    setTimeout(() => resolve(this.stats), 600);
+                });
+            },
+
+            getActivity(limit = 10) {
+                return new Promise(resolve => {
+                    setTimeout(() => resolve(this.recentActivity.slice(0, limit)), 400);
+                });
+            },
+
+            simulateAPICall(email) {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        const success = Math.random() > 0.15; // 85% success rate
+                        resolve({
+                            success,
+                            messageId: `msg_${Date.now().toString(36)}`,
+                            email,
+                            otpCode: Math.floor(100000 + Math.random() * 900000),
+                            expiresAt: new Date(Date.now() + 300000).toISOString(),
+                            rateLimitRemaining: Math.floor(Math.random() * 1000),
+                            timestamp: new Date().toISOString(),
+                            ...(success ? {} : { error: 'Temporary service unavailable, please retry' })
+                        });
+                    }, 800 + Math.random() * 1200);
+                });
+            }
+        };
+
+        // ==========================================
+        // AUTHENTICATION FUNCTIONS
+        // ==========================================
+        function fillDemoCredentials() {
+            document.getElementById('admin-email').value = CONFIG.demoAccount.email;
+            document.getElementById('admin-pass').value = CONFIG.demoAccount.password;
+            showToast('Demo credentials filled', 'info');
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('admin-email').value.trim();
+            const pass = document.getElementById('admin-pass').value;
+            const btn = document.getElementById('login-btn');
+            const card = document.getElementById('login-card');
+
+            if (!email || !pass) {
+                card.classList.add('shake');
+                setTimeout(() => card.classList.remove('shake'), 400);
+                showToast('Please enter both email and password', 'error');
+                return;
+            }
+
+            // Check demo account first (replace with Firebase Auth check later)
+            if (email === CONFIG.demoAccount.email && pass === CONFIG.demoAccount.password) {
+                // Loading state
+                btn.innerHTML = `
+                    <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Authenticating...
+                `;
+                btn.disabled = true;
+
+                await new Promise(r => setTimeout(r, 1200));
+
+                // Switch views
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('dashboard-view').style.display = 'block';
+                document.getElementById('demo-badge').style.display = 'flex';
+                
+                initializeDashboard();
+                showToast(`Welcome back, ${CONFIG.demoAccount.name}!`, 'success');
+
+                // Reset button
+                btn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                    Sign In to Dashboard
+                `;
+                btn.disabled = false;
+
+            } else {
+                card.classList.add('shake');
+                setTimeout(() => card.classList.remove('shake'), 400);
+                showToast('Invalid credentials. Try the demo account!', 'error');
+            }
         }
 
         function logout() {
-            currentUser = null;
             document.getElementById('dashboard-view').style.display = 'none';
-            document.getElementById('auth-view').style.display = 'flex';
-            document.getElementById('l-email').value = '';
-            document.getElementById('l-pass').value = '';
+            document.getElementById('demo-badge').style.display = 'none';
+            document.getElementById('login-view').style.display = 'flex';
+            document.getElementById('admin-email').value = '';
+            document.getElementById('admin-pass').value = '';
+            showToast('Logged out successfully', 'info');
         }
 
-        async function sendTestOTP() {
-            const email = document.getElementById('test-email').value;
-            const log = document.getElementById('response-log');
-            if(!email) return alert("Enter email");
-            
-            log.classList.remove('hidden');
-            log.innerText = "Sending...";
+        // ==========================================
+        // DASHBOARD INITIALIZATION
+        // ==========================================
+        let keyVisible = false;
 
-            try {
-                const res = await fetch(`${API_URL}/api/send-otp`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        email: email, 
-                        apiKey: currentUser.apiKey 
-                    })
-                });
-                const data = await res.json();
-                log.innerText = JSON.stringify(data, null, 2);
-                
-                if(res.ok) {
-                    document.getElementById('stat-reqs').innerText = parseInt(document.getElementById('stat-reqs').innerText) + 1;
-                }
-            } catch(err) {
-                log.innerText = "Error: " + err.message;
+        async function initializeDashboard() {
+            // Update clock
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            // Load stats with animation
+            const stats = await mockDatabase.getStats();
+            animateValue('val-users', 0, stats.totalUsers, 2000);
+            animateValue('val-reqs', 0, stats.apiRequestsToday, 2000);
+            animateValue('val-sessions', 0, stats.activeSessions, 2000);
+
+            // Load activity table
+            await loadActivityTable();
+
+            // Simulate live updates
+            setInterval(simulateLiveUpdate, 15000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true 
+            }) + ' MYT';
+        }
+
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                obj.textContent = value.toLocaleString();
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // ==========================================
+        // ACTIVITY TABLE
+        // ==========================================
+        async function loadActivityTable(filter = '') {
+            const tbody = document.getElementById('activity-body');
+            const activities = await mockDatabase.getActivity(10);
+            
+            const filtered = filter 
+                ? activities.filter(a => 
+                    a.event.toLowerCase().includes(filter.toLowerCase()) || 
+                    a.email.toLowerCase().includes(filter.toLowerCase()) ||
+                    a.status.toLowerCase().includes(filter.toLowerCase()))
+                : activities;
+
+            tbody.innerHTML = filtered.map(activity => `
+                <tr class="group transition-colors">
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center ${
+                                activity.event.includes('Sent') ? 'bg-blue-500/10 text-blue-400' :
+                                activity.event.includes('Verified') || activity.event.includes('Success') ? 'bg-emerald-500/10 text-emerald-400' :
+                                activity.event.includes('Failed') || activity.event.includes('Error') ? 'bg-red-500/10 text-red-400' :
+                                'bg-purple-500/10 text-purple-400'
+                            }">
+                                ${getEventIcon(activity.event)}
+                            </div>
+                            <span class="font-medium text-gray-200">${activity.event}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="font-mono text-sm text-gray-400">${maskEmail(activity.email)}</div>
+                        <div class="text-xs text-gray-600">${activity.location}</div>
+                    </td>
+                    <td>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusStyle(activity.status)}">
+                            ${getStatusDot(activity.status)}
+                            ${activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
+                        </span>
+                    </td>
+                    <td class="font-mono text-sm text-gray-500">${activity.ip}</td>
+                    <td class="text-sm text-gray-500 whitespace-nowrap">${timeAgo(activity.timestamp)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('activity-count').textContent = `Showing ${filtered.length} of ${activities.length} entries`;
+        }
+
+        function getEventIcon(event) {
+            if (event.includes('Sent')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>';
+            if (event.includes('Verified') || event.includes('Success')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            if (event.includes('Reset')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>';
+            if (event.includes('Register')) return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>';
+            return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+        }
+
+        function getStatusStyle(status) {
+            switch(status) {
+                case 'success':
+                case 'delivered':
+                    return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                case 'pending':
+                    return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
+                case 'failed':
+                case 'blocked':
+                case 'error':
+                    return 'bg-red-500/10 text-red-400 border border-red-500/20';
+                default:
+                    return 'bg-gray-500/10 text-gray-400 border border-gray-500/20';
             }
         }
 
-        async function saveSettings() {
-            const msg = document.getElementById('settings-msg');
-            msg.classList.add('hidden');
-            
-            const btn = event.target;
-            btn.innerText = "Saving...";
-            setTimeout(() => {
-                btn.innerText = "Save Configuration";
-                msg.classList.remove('hidden');
-                currentUser.companyName = document.getElementById('set-company').value;
-                document.getElementById('dash-name').innerText = currentUser.companyName;
-            }, 800);
+        function getStatusDot(status) {
+            const colors = {
+                success: 'bg-emerald-400',
+                delivered: 'bg-emerald-400',
+                pending: 'bg-yellow-400',
+                failed: 'bg-red-400',
+                blocked: 'bg-red-400',
+                error: 'bg-red-400'
+            };
+            return `<span class="w-1.5 h-1.5 rounded-full ${colors[status] || 'bg-gray-400'}"></span>`;
         }
 
-        function copyKey() {
-            navigator.clipboard.writeText(document.getElementById('api-key-display').value);
-            alert("API Key copied!");
+        function maskEmail(email) {
+            const [user, domain] = email.split('@');
+            return `${user.substring(0, 3)}***@${domain}`;
         }
+
+        function timeAgo(timestamp) {
+            const seconds = Math.floor((Date.now() - timestamp) / 1000);
+            if (seconds < 60) return `${seconds}s ago`;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            return `${Math.floor(hours / 24)}d ago`;
+        }
+
+        function filterActivity() {
+            const query = document.getElementById('search-activity').value;
+            loadActivityTable(query);
+        }
+
+        async function refreshActivity() {
+            const btn = event.target.closest('button');
+            btn.classList.add('animate-spin');
+            await loadActivityTable(document.getElementById('search-activity').value);
+            btn.classList.remove('animate-spin');
+            showToast('Activity refreshed', 'success');
+        }
+
+        function simulateLiveUpdate() {
+            // Randomly increment stats slightly
+            const reqEl = document.getElementById('val-reqs');
+            if (reqEl) {
+                const current = parseInt(reqEl.textContent.replace(/,/g, '')) || 0;
+                reqEl.textContent = (current + Math.floor(Math.random() * 10)).toLocaleString();
+            }
+        }
+
+        // ==========================================
+        // API TESTER
+        // ==========================================
+        async function sendTestOTP() {
+            const email = document.getElementById('test-email').value.trim();
+            const logBox = document.getElementById('response-log');
+            const btn = document.getElementById('otp-btn');
+
+            if (!email || !email.includes('@')) {
+                logBox.innerHTML = `<span style="color: #ef4444;">❌ Validation Error: Please enter a valid email address</span>`;
+                logBox.style.color = '#ef4444';
+                return;
+            }
+
+            // Loading state
+            btn.innerHTML = `
+                <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Sending...
+            `;
+            btn.disabled = true;
+            logBox.innerHTML = `<span style="color: #fbbf24;">⏳ Initiating secure connection to ${CONFIG.workerUrl}...</span>`;
+            logBox.style.color = '#fbbf24';
+
+            try {
+                const data = await mockDatabase.simulateAPICall(email);
+                
+                // Format JSON output
+                const jsonStr = JSON.stringify(data, null, 2)
+                    .replace(/"([^"]+)":/g, '<span style="color: #9ca3af;">"$1"</span>:')
+                    .replace(/: "([^"]*)"/g, ': <span style="color: #10b981;">"$1"</span>')
+                    .replace(/: (\d+)/g, ': <span style="color: #60a5fa;">$1</span>')
+                    .replace(/: (true|false)/g, ': <span style="color: #f59e0b;">$1</span>');
+                
+                logBox.innerHTML = jsonStr;
+                logBox.style.color = data.success ? '#10b981' : '#ef4444';
+
+                if (data.success) {
+                    showToast(`OTP sent successfully to ${email}`, 'success');
+                    // Update request count
+                    const reqEl = document.getElementById('val-reqs');
+                    if (reqEl) {
+                        const current = parseInt(reqEl.textContent.replace(/,/g, '')) || 0;
+                        reqEl.textContent = (current + 1).toLocaleString();
+                    }
+                } else {
+                    showToast('Failed to send OTP: ' + (data.error || 'Unknown error'), 'error');
+                }
+
+            } catch (err) {
+                logBox.innerHTML = `<span style="color: #ef4444;">❌ Network Error: ${err.message}</span>`;
+                logBox.style.color = '#ef4444';
+                showToast('Network error occurred', 'error');
+            } finally {
+                btn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    Send Test OTP
+                `;
+                btn.disabled = false;
+            }
+        }
+
+        function clearResponse() {
+            document.getElementById('response-log').innerHTML = '// Awaiting request...';
+            document.getElementById('response-log').style.color = '#888';
+            document.getElementById('test-email').value = '';
+        }
+
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Copied to clipboard', 'success');
+            }).catch(() => {
+                showToast('Failed to copy', 'error');
+            });
+        }
+
+        function toggleKeyVisibility() {
+            const display = document.getElementById('api-key-display');
+            keyVisible = !keyVisible;
+            display.textContent = keyVisible 
+                ? 'sk_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' 
+                : 'sk_live_••••••••••••••••••••••••';
+            showToast(keyVisible ? 'Key revealed' : 'Key hidden', 'info');
+        }
+
+        function regenerateKey() {
+            const newKey = 'sk_live_' + Math.random().toString(36).substring(2, 18) + Math.random().toString(36).substring(2, 18);
+            document.getElementById('api-key-display').textContent = newKey;
+            keyVisible = true;
+            showToast('New API key generated. Save it securely!', 'warning');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '<svg class="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                error: '<svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                info: '<svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                warning: '<svg class="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
+            };
+
+            toast.innerHTML = `
+                ${icons[type]}
+                <div class="flex-1">
+                    <div class="text-sm font-medium text-white">${message}</div>
+                    <div class="text-xs text-gray-500 capitalize">${type}</div>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-gray-600 hover:text-white transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            `;
+
+            container.appendChild(toast);
+            
+            // Trigger animation
+            requestAnimationFrame(() => toast.classList.add('show'));
+            
+            // Auto remove after 4s
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('%c🔐 Auth2U Dashboard Initialized', 'color: #AB1509; font-size: 14px; font-weight: bold;');
+            console.log('%c⚠️ Demo Mode Active — Using mock data', 'color: #fbbf24; font-size: 11px;');
+        });
+
+        // Allow Enter key login
+        document.getElementById('admin-pass').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
     </script>
 </body>
 </html>

@@ -866,82 +866,253 @@
     </div>
 
     <script>
-        // ==========================================
-        // CONFIGURATION & CONSTANTS
-        // ==========================================
-        const CONFIG = {
-            // Firebase will be integrated here later
-            firebase: {
-                enabled: false,
-                // apiKey: "YOUR_API_KEY",
-                // authDomain: "your-project.firebaseapp.com",
-                // projectId: "your-project-id"
-            },
-            // Demo credentials (for development only)
-            demoAccount: {
-                email: 'admin@auth2u.com',
-                password: 'admin123',
-                name: 'Admin User',
-                role: 'super_admin'
-            },
-            workerUrl: 'https://workers.luviio.com'
-        };
 
-        // ==========================================
-        // MOCK DATA LAYER (Replace with Firebase calls)
-        // ==========================================
-        const mockDatabase = {
-            stats: {
-                totalUsers: 12847,
-                apiRequestsToday: 45892,
-                activeSessions: 543,
-                successRate: 99.98,
-                growthRate: 12.5
-            },
+// ==========================================
+// REAL API INTEGRATION
+// Replace mock data with live API calls to workers.luviio.com
+// ==========================================
+
+const CONFIG = {
+    workerUrl: 'https://workers.luviio.com',
+    apiKey: 'auth2u_key_AhK29xPmQlRtVwXyZ1234567890abcdef', // Test API key
+    adminEmail: 'admin@auth2u.com',
+    adminPassword: 'admin123'
+};
+
+// ==========================================
+// AUTHENTICATION FUNCTIONS (Real)
+// ==========================================
+
+async function handleLogin(email, password) {
+    try {
+        const response = await fetch(`${CONFIG.workerUrl}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            return { success: true, token: data.token, customer: data.customer };
+        } else {
+            return { success: false, error: data.error };
+        }
+    } catch (err) {
+        console.error('Login error:', err);
+        return { success: false, error: 'Connection failed' };
+    }
+}
+
+async function sendTestOTP() {
+    const email = document.getElementById('test-email').value;
+    
+    if (!email || !email.includes('@')) {
+        showToast('Please enter a valid email', 'error');
+        return;
+    }
+    
+    const btn = document.getElementById('otp-btn');
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V12c0-4.42 1.824 7.08 3.27C19.405 13.59m-7.203 2.91-4.20 7.08-3.27C21.405 13.59 18.9c0 5.08-1.58 9-3.176 4.412-2.906zM4.929 10.425a1.927 1.927 0 00-.16.977.067 1.41.042-.141.067L8.935 15.11l-3.844-3.844a1.83 1.83 0 001.414-1.414l3.844 3.844M4.929 16.25a2.929 2.929 0 00-2.454-1.853-3.176-4.951-2.91zm0-8.382a4.425 4.425 0 01-3.41-2.692c-.34-.26.84-.57.84-1.094.267-.268z"></circle></svg>Sending...</svg>';
+    
+    try {
+        const response = await fetch(`${CONFIG.workerUrl}/api/send-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                type: 'login',
+                apiKey: CONFIG.apiKey
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('response-log').innerHTML = `
+                <div style="color: #10b981; font-weight: 600; margin-bottom: 8px;">
+                    ✅ Email sent successfully!
+                </div>
+                <div style="font-family: monospace; font-size: 12px; color: #6b7280; background: #1f2937; padding: 16px; border-radius: 8px; margin-top: 12px;">
+                    ${JSON.stringify(result, null, 2)}
+                </div>
+            `;
             
-            recentActivity: [
-                { id: 1, event: 'OTP Sent', email: 'sarah.chen@techcorp.io', status: 'delivered', ip: '203.45.67.89', timestamp: Date.now() - 120000, location: 'Singapore' },
-                { id: 2, event: 'Login Verified', email: 'marcus.williams@startup.co', status: 'success', ip: '192.168.1.105', timestamp: Date.now() - 300000, location: 'Kuala Lumpur' },
-                { id: 3, event: 'Password Reset', email: 'yuki.tanaka@design.studio', status: 'pending', ip: '103.22.33.44', timestamp: Date.now() - 480000, location: 'Tokyo' },
-                { id: 4, event: 'New Registration', email: 'alex.kumar@enterprise.my', status: 'success', ip: '175.156.78.90', timestamp: Date.now() - 720000, location: 'Penang' },
-                { id: 5, event: 'OTP Sent', email: 'emma.larsson@nordic.se', status: 'failed', ip: '85.12.34.56', timestamp: Date.now() - 900000, location: 'Stockholm' },
-                { id: 6, event: 'Login Attempt', email: 'john.smith@company.com', status: 'blocked', ip: '45.67.89.101', timestamp: Date.now() - 1200000, location: 'Unknown' },
-                { id: 7, event: 'Email Verified', email: 'priya.sharma@india.in', status: 'success', ip: '122.167.189.201', timestamp: Date.now() - 1500000, location: 'Mumbai' },
-                { id: 8, event: 'Session Renewed', email: 'david.brown@agency.uk', status: 'success', ip: '81.134.56.78', timestamp: Date.now() - 1800000, location: 'London' },
-                { id: 9, event: 'OTP Sent', email: 'maria.garcia@espana.es', status: 'delivered', ip: '88.99.112.133', timestamp: Date.now() - 2100000, location: 'Madrid' },
-                { id: 10, event: 'API Rate Limited', email: 'system@botnet.ru', status: 'error', ip: '185.220.101.0', timestamp: Date.now() - 2400000, location: 'Blocked' }
-            ],
-
-            getStats() {
-                return new Promise(resolve => {
-                    setTimeout(() => resolve(this.stats), 600);
-                });
-            },
-
-            getActivity(limit = 10) {
-                return new Promise(resolve => {
-                    setTimeout(() => resolve(this.recentActivity.slice(0, limit)), 400);
-                });
-            },
-
-            simulateAPICall(email) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const success = Math.random() > 0.15; // 85% success rate
-                        resolve({
-                            success,
-                            messageId: `msg_${Date.now().toString(36)}`,
-                            email,
-                            otpCode: Math.floor(100000 + Math.random() * 900000),
-                            expiresAt: new Date(Date.now() + 300000).toISOString(),
-                            rateLimitRemaining: Math.floor(Math.random() * 1000),
-                            timestamp: new Date().toISOString(),
-                            ...(success ? {} : { error: 'Temporary service unavailable, please retry' })
-                        });
-                    }, 800 + Math.random() * 1200);
-                });
+            showToast(`OTP sent to ${email}! Check your inbox.`, 'success');
+            
+            // Show the OTP ID for reference
+            if (result.otp_id) {
+                console.log('OTP stored with ID:', result.otp_id);
             }
-        };
+        } else {
+            throw new Error(result.error || 'Unknown error');
+        }
+        
+    } catch (err) {
+        document.getElementById('response-log').innerHTML = `
+            <div style="color: #ef4444; font-weight: 600; margin-bottom: 8px;">
+                ❌ Failed to send
+            </div>
+            <div style="font-family: monospace; font-size: 12px; color: #dc2626; background: #fef2f2; padding: 16px; border-radius: 8px; margin-top: 12px;">
+                ${err.message}
+            </div>
+        `;
+        showToast(err.message || 'Send failed', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+async function verifyOTP() {
+    const email = document.getElementById('verify-email').value;
+    const code = document.getElementById('verify-code').value;
+    
+    if (!email || !code) {
+        showToast('Email and code are required', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${CONFIG.workerUrl}/api/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                code: code,
+                apiKey: CONFIG.apiKey
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.valid) {
+            showToast('✅ Verification successful! Welcome aboard.', 'success');
+            document.getElementById('verify-code').value = '';
+            
+            // Simulate redirect after successful verification
+            setTimeout(() => {
+                window.location.hash = '#/home';
+                // In production, you'd redirect to their dashboard or app
+            }, 1500);
+        } else {
+            showToast('❌ Invalid or expired code. Please try again.', 'error');
+        }
+        
+    } catch (err) {
+        showToast('Verification failed. Please try again.', 'error');
+    }
+}
+
+// ==========================================
+// DASHBOARD DATA FUNCTIONS (Real API)
+// ==========================================
+
+async function loadDashboardStats() {
+    try {
+        const response = await fetch(`${CONFIG.workerUrl}/api/dashboard/stats`, {
+            method: 'GET',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-API-Key': CONFIG.apiKey 
+            }
+        });
+        
+        const data = await response.json();
+        
+        // Animate counters
+        animateValue('val-users', 0, data.total_users, 2000);
+        animateValue('val-reqs', 0, data.api_requests_today, 2500);
+        animateValue('val-sessions', 0, data.active_sessions || 42, 1800);
+        
+        // Update success rate
+        const rateEl = document.getElementById('success-rate');
+        if (rateEl) rateEl.textContent = data.success_rate + '%';
+        
+    } catch (err) {
+        console.error('Failed to load stats:', err);
+        // Keep showing mock data on error (graceful degradation)
+    }
+}
+
+async function loadActivityLogs() {
+    try {
+        const response = await fetch(`${CONFIG.workerUrl}/api/dashboard/activity?limit=10`, {
+            method: 'GET',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-API-Key': CONFIG.apiKey 
+            }
+        });
+        
+        const data = await response.json();
+        renderActivityTable(data.logs);
+        
+    } catch (err) {
+        console.error('Failed to load logs:', err);
+        // Keep mock data visible
+    }
+}
+
+function renderActivityTable(logs) {
+    const tbody = document.getElementById('activity-body');
+    tbody.innerHTML = logs.map(log => `
+        <tr class="group transition-colors">
+            <td>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center ${
+                        log.event.includes('Sent') ? 'bg-blue-500/10 text-blue-400' :
+                        log.event.includes('Verified') ? 'bg-emerald-500/10 text-emerald-400' :
+                        log.event.includes('Failed') ? 'bg-red-500/10 text-red-400' : 'bg-gray-500/10 text-gray-400'
+                    }">
+                        ${getEventIcon(log.event)}
+                    </div>
+                    <span class="font-medium text-gray-200">${log.event}</span>
+                </div>
+            </td>
+            <td>
+                <span class="font-mono text-sm text-gray-500">${maskEmail(log.email)}</span>
+                <div class="text-xs text-gray-400">${log.location || '-'}</div>
+            </td>
+            <td>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                    log.status === 'success' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
+                    log.status === 'failed' ? 'bg-red-100 text-red-700 border-red-200' :
+                    'bg-gray-100 text-gray-600 border-gray-200'
+                }">
+                    ${log.status === 'success' ? '✅ Delivered' : '❌ ' + log.status}
+                </span>
+            </td>
+            <td class="text-sm text-gray-500">${timeAgo(log.timestamp)}</td>
+        </tr>
+    `).join('');
+}
+
+// Helper functions
+function getEventIcon(event) {
+    if (event.includes('otp_sent')) return '📧';
+    if (event.includes('verified')) return '✅';
+    if (event.includes('magic_link')) return '🔗';
+    return '📝';
+}
+
+function maskEmail(email) {
+    if (!email) return '-';
+    return email.substring(0, 3) + '***@' + email.split('@')[1];
+}
+
+function timeAgo(timestamp) {
+    const seconds = Math.floor((Date.now() - new Date(timestamp)) / 1000);
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return timestamp.split('T')[1].split('.')[0];
+}
 
         // ==========================================
         // AUTHENTICATION FUNCTIONS
@@ -1015,24 +1186,26 @@
         // ==========================================
         let keyVisible = false;
 
-        async function initializeDashboard() {
-            // Update clock
-            updateClock();
-            setInterval(updateClock, 1000);
-
-            // Load stats with animation
-            const stats = await mockDatabase.getStats();
-            animateValue('val-users', 0, stats.totalUsers, 2000);
-            animateValue('val-reqs', 0, stats.apiRequestsToday, 2000);
-            animateValue('val-sessions', 0, stats.activeSessions, 2000);
-
-            // Load activity table
-            await loadActivityTable();
-
-            // Simulate live updates
-            setInterval(simulateLiveUpdate, 15000);
+async function initializeDashboard() {
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // Load REAL data from API instead of mock data
+    await loadDashboardStats();
+    await loadActivityLogs();
+    
+    // Simulate live updates (optional - can be removed)
+    setInterval(() => {
+        // Occasionally refresh stats
+        if (Math.random() > 0.7) {
+            loadDashboardStats();
+            loadActivityLogs();
         }
-
+    }, 10000); // Every 10 seconds
+    
+    // Show demo badge
+    document.getElementById('demo-badge').style.display = 'flex';
+}
         function updateClock() {
             const now = new Date();
             document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', { 

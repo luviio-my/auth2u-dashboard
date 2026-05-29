@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Auth2U Admin Panel</title>
+  <title>Auth2U Admin Dashboard</title>
   <style>
     body {
       font-family: Arial;
@@ -35,77 +35,137 @@
     th, td {
       border: 1px solid #334155;
       padding: 8px;
-      text-align: left;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
 
-<h1>Auth2U Admin Panel</h1>
+<h1>Auth2U Dashboard</h1>
 
-<h3>API Key</h3>
-<input id="apiKey" placeholder="Enter superadmin API key" style="width:400px;" />
-
-<br>
-
-<button onclick="loadUsers()">Load Users</button>
-<button onclick="loadStats()">Load Stats</button>
-
-<div class="card">
-  <h3>Create User</h3>
+<!-- ================= LOGIN ================= -->
+<div id="loginBox" class="card">
+  <h3>Login</h3>
   <input id="email" placeholder="email" />
-  <input id="plan" placeholder="plan (free/sme/business)" />
-  <button onclick="createUser()">Create</button>
+  <button onclick="sendOtp()">Send OTP</button>
 </div>
 
-<div id="output"></div>
+<!-- ================= OTP ================= -->
+<div id="otpBox" class="card hidden">
+  <h3>Enter OTP</h3>
+  <input id="otp" placeholder="6-digit OTP" />
+  <button onclick="verifyOtp()">Verify</button>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div id="dashboard" class="hidden">
+
+  <h2>Dashboard</h2>
+
+  <button onclick="loadUsers()">Load Users</button>
+  <button onclick="loadStats()">Load Stats</button>
+
+  <div class="card">
+    <h3>Create User (Admin)</h3>
+    <input id="newEmail" placeholder="email" />
+    <input id="plan" placeholder="plan (free/sme/business)" />
+    <button onclick="createUser()">Create</button>
+  </div>
+
+  <div id="output"></div>
+</div>
 
 <script>
 const baseURL = "https://auth2u.people-luviio.workers.dev";
 
-function getKey() {
-  return document.getElementById("apiKey").value;
+let tempEmail = "";
+let token = "";
+
+// ================= LOGIN STEP 1 =================
+async function sendOtp() {
+  tempEmail = document.getElementById("email").value;
+
+  const res = await fetch(`${baseURL}/send-otp?email=${tempEmail}`);
+  const data = await res.json();
+
+  alert(data.message || "OTP sent");
+
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("otpBox").classList.remove("hidden");
 }
 
+// ================= LOGIN STEP 2 =================
+async function verifyOtp() {
+  const otp = document.getElementById("otp").value;
+
+  const res = await fetch(
+    `${baseURL}/verify-otp?email=${tempEmail}&code=${otp}`
+  );
+
+  const data = await res.json();
+
+  if (!data.success) {
+    alert("Invalid OTP");
+    return;
+  }
+
+  token = data.token;
+
+  document.getElementById("otpBox").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+
+  alert("Login successful");
+}
+
+// ================= AUTH HEADER =================
+function headers() {
+  return {
+    Authorization: "Bearer " + token
+  };
+}
+
+// ================= LOAD USERS =================
 async function loadUsers() {
   const res = await fetch(baseURL + "/admin/keys", {
-    headers: {
-      "Authorization": "Bearer " + getKey()
-    }
+    headers: headers()
   });
 
   const data = await res.json();
+
   document.getElementById("output").innerHTML =
     "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
 }
 
+// ================= LOAD STATS =================
 async function loadStats() {
   const res = await fetch(baseURL + "/admin/stats", {
-    headers: {
-      "Authorization": "Bearer " + getKey()
-    }
+    headers: headers()
   });
 
   const data = await res.json();
+
   document.getElementById("output").innerHTML =
     "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
 }
 
+// ================= CREATE USER =================
 async function createUser() {
-  const email = document.getElementById("email").value;
+  const email = document.getElementById("newEmail").value;
   const plan = document.getElementById("plan").value;
 
   const res = await fetch(
-    baseURL + `/admin/create-user?email=${email}&plan=${plan}`,
+    `${baseURL}/admin/create-user?email=${email}&plan=${plan}`,
     {
       method: "POST",
-      headers: {
-        "Authorization": "Bearer " + getKey()
-      }
+      headers: headers()
     }
   );
 
   const data = await res.json();
+
   document.getElementById("output").innerHTML =
     "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
 }
